@@ -81,7 +81,7 @@ public class NsDevice: MonoBehaviour
 	{
 		if (m_DeviceShader != null) {
 			m_DeviceShader.SetTexture (m_ClearKernal, "Result", m_FrontSurface.Target);
-			m_DeviceShader.Dispatch (m_ClearKernal, 2, 2, 0);
+			m_DeviceShader.Dispatch (m_ClearKernal, BackSurfaceWidth/32, BackSurfaceHeight/32, 1);
 		}
 	}
 }
