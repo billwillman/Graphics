@@ -7,9 +7,18 @@ public class NsDevice: MonoBehaviour
 	//private NsSurface m_BackSurface = null;
 	private ComputeShader m_DeviceShader;
 	private int m_ClearKernal = -1;
+    private int m_FrontTexId = -1;
+    private int m_ClearColorId = -1;
 
+
+    public Color ClearColor = Color.black;
 	public int BackSurfaceWidth = 1024;
-	public int BackSurfaceHeight = 768;
+    public int BackSurfaceHeight = 768;
+
+    private void GeneratorIds() {
+        m_FrontTexId = Shader.PropertyToID("frontSurface");
+        m_ClearColorId = Shader.PropertyToID("iClearColor");
+    }
 
 	// 前缓冲
 	private NsSurface m_FrontSurface = null;
@@ -37,12 +46,13 @@ public class NsDevice: MonoBehaviour
 
 	void Update()
 	{
-		Clear (Color.black);
+		Clear ();
 	}
 
 	void Start()
 	{
-		CreateComputeShader ();
+        GeneratorIds();
+        CreateComputeShader ();
 		CreateSurface ();
 		Bind (GetComponent<Renderer> ());
 	}
@@ -77,10 +87,11 @@ public class NsDevice: MonoBehaviour
 	}
 
 	// 清理的颜色
-	public void Clear(Color cleanColor)
+	public void Clear()
 	{
 		if (m_DeviceShader != null) {
-			m_DeviceShader.SetTexture (m_ClearKernal, "Result", m_FrontSurface.Target);
+            m_DeviceShader.SetFloats(m_ClearColorId, ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
+            m_DeviceShader.SetTexture (m_ClearKernal, m_FrontTexId, m_FrontSurface.Target);
 			m_DeviceShader.Dispatch (m_ClearKernal, BackSurfaceWidth/32, BackSurfaceHeight/32, 1);
 		}
 	}
