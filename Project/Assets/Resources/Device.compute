@@ -14,3 +14,8 @@ void CSClear (uint3 id : SV_DispatchThreadID)
 	//frontSurface[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
 	frontSurface[id.xy] = iClearColor;
 }
+
+StructuredBuffer<float3> iVertexBuffer;
+StructuredBuffer<float2> iUVBuffer;
+StructuredBuffer<float4> iColorBuffer;
+float4x4 iWorldMatrix;
