@@ -60,6 +60,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Script\Core\NsCamera.cs" />
     <Compile Include="Assets\Script\Core\NsDevice.cs" />
     <Compile Include="Assets\Script\Core\NsIBuffer.cs" />
     <Compile Include="Assets\Script\Core\NsIndexBuffer.cs" />

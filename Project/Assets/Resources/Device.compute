@@ -1,21 +1,62 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSClear
+#pragma kernel CSDrawBuf
 
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
+
+// 颜色缓冲
 RWTexture2D<float4> frontSurface;
+// ZBUFFER缓冲
+RWTexture2D<float> zBufferSurface;
 float4 iClearColor;
+uint2 iScreenSize;
 
 [numthreads(32,32,1)]
 void CSClear (uint3 id : SV_DispatchThreadID)
 {
 	// TODO: insert actual code here!
 
-	//frontSurface[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+	// 清空颜色缓冲
 	frontSurface[id.xy] = iClearColor;
+	// 清空深度缓冲
+	zBufferSurface[id.xy] = -1000;
 }
 
 StructuredBuffer<float3> iVertexBuffer;
 StructuredBuffer<float2> iUVBuffer;
 StructuredBuffer<float4> iColorBuffer;
+StructuredBuffer<uint> iIndex32Buffer;
 float4x4 iWorldMatrix;
+
+// 三角形光栅化
+void DrawTri(float3 v1, float3 v2, float3 v3)
+{
+
+}
+
+[numthreads(256, 1, 1)]
+void CSDrawBuf(uint3 id : SV_DispatchThreadID)
+{
+	// 绘制三角形, 
+	int triCnt = 256;
+	int triLen = iIndex32Buffer.Length/3;
+	int startIdx = triLen / triCnt * id.x;
+	int count;
+	if ((startIdx + triCnt) > triLen)
+		count = triLen - startIdx;
+	else
+		count = triCnt;
+	for (int i = startIdx; i < startIdx + count; ++i)
+	{
+		int i1 = iIndex32Buffer[i];
+		int i2 = iIndex32Buffer[i + 1];
+		int i3 = iIndex32Buffer[i + 2];
+
+		// 再从VertexBuf取顶点数据, 根据扫描算法
+		float3 v1 = iVertexBuffer[i1];
+		float3 v2 = iVertexBuffer[i2];
+		float3 v3 = iVertexBuffer[i3];
+		DrawTri(v1, v2, v3);
+	}
+}

@@ -8,8 +8,17 @@ public class NsDevice: MonoBehaviour
 	private ComputeShader m_DeviceShader;
 	private int m_ClearKernal = -1;
     private int m_FrontTexId = -1;
+    private int m_ZBufTexId = -1;
     private int m_ClearColorId = -1;
-
+    private NsVertexBuffer m_CurVerBuf = null;
+    private NsIndex32Buffer m_CurIdxBuf = null;
+    private int m_VertexBufId = -1;
+    private int m_IndexBufId = -1;
+    private int m_ColorBufId = -1;
+    private int m_UV0BufId = -1;
+    private int m_DrawBufKernal = -1;
+    private int m_Index32BufId = -1;
+    private int m_ScreenSizeId = -1;
 
     public Color ClearColor = Color.black;
 	public int BackSurfaceWidth = 1024;
@@ -17,7 +26,16 @@ public class NsDevice: MonoBehaviour
 
     private void GeneratorIds() {
         m_FrontTexId = Shader.PropertyToID("frontSurface");
+        m_ZBufTexId = Shader.PropertyToID("zBufferSurface");
         m_ClearColorId = Shader.PropertyToID("iClearColor");
+
+        // Buffer
+        m_VertexBufId = Shader.PropertyToID("iVertexBuffer");
+        m_IndexBufId = Shader.PropertyToID("iIndex32Buffer");
+        m_ColorBufId = Shader.PropertyToID("iColorBuffer");
+        m_UV0BufId = Shader.PropertyToID("iUV0Buffer");
+        m_Index32BufId = Shader.PropertyToID("iIndex32Buffer");
+        m_ScreenSizeId = Shader.PropertyToID("iScreenSize");
     }
 
 	// 前缓冲
@@ -43,10 +61,21 @@ public class NsDevice: MonoBehaviour
 		}
 	}
 
+    void InitDraw() {
+        if (m_DeviceShader != null) {
+            m_DeviceShader.SetInts(m_ScreenSizeId, BackSurfaceWidth, BackSurfaceHeight);
+        }
+    }
+
+    void PreDraw() {
+        
+    }
+
 
 	void Update()
 	{
-		Clear ();
+        PreDraw();
+        Clear ();
 	}
 
 	void Start()
@@ -54,7 +83,8 @@ public class NsDevice: MonoBehaviour
         GeneratorIds();
         CreateComputeShader ();
 		CreateSurface ();
-		Bind (GetComponent<Renderer> ());
+        InitDraw();
+        Bind (GetComponent<Renderer> ());
 	}
 
 	void OnDestroy()
@@ -67,7 +97,9 @@ public class NsDevice: MonoBehaviour
 	{
 		m_DeviceShader = Resources.Load<ComputeShader> ("Device");
 		m_ClearKernal = m_DeviceShader.FindKernel ("CSClear");
-	}
+        m_DrawBufKernal = m_DeviceShader.FindKernel("CSDrawBuf");
+
+    }
 
 	private void DestroyComputeShader()
 	{
@@ -89,10 +121,36 @@ public class NsDevice: MonoBehaviour
 	// 清理的颜色
 	public void Clear()
 	{
-		if (m_DeviceShader != null) {
+		if (m_DeviceShader != null && m_FrontSurface != null) {
+
+            m_DeviceShader.SetTexture(m_ClearKernal, m_FrontTexId, m_FrontSurface.Target);
+            m_DeviceShader.SetTexture(m_ClearKernal, m_ZBufTexId, m_FrontSurface.ZTarget);
+
             m_DeviceShader.SetFloats(m_ClearColorId, ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
-            m_DeviceShader.SetTexture (m_ClearKernal, m_FrontTexId, m_FrontSurface.Target);
 			m_DeviceShader.Dispatch (m_ClearKernal, BackSurfaceWidth/32, BackSurfaceHeight/32, 1);
 		}
 	}
+
+    public void DrawBuffer(NsVertexBuffer vertBuf, NsIndex32Buffer idxBuf) {
+        BindVertexBuffer(vertBuf);
+        BindIndex32Buffer(idxBuf);
+    }
+
+    protected void BindVertexBuffer(NsVertexBuffer buffer) {
+        if (m_CurVerBuf != buffer) {
+            m_CurVerBuf = buffer;
+
+            m_DeviceShader.SetBuffer(m_DrawBufKernal, m_VertexBufId, buffer.VertexBuf);
+            m_DeviceShader.SetBuffer(m_DrawBufKernal, m_ColorBufId, buffer.ColorBuf);
+            m_DeviceShader.SetBuffer(m_DrawBufKernal, m_UV0BufId, buffer.UV0Buf);
+        }
+    }
+
+    protected void BindIndex32Buffer(NsIndex32Buffer buffer) {
+        if (m_CurIdxBuf != buffer) {
+            m_CurIdxBuf = buffer;
+
+            m_DeviceShader.SetBuffer(m_DrawBufKernal, m_Index32BufId, buffer.Buffer);
+        }
+    }
 }
