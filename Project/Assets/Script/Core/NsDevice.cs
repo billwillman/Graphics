@@ -24,18 +24,27 @@ public class NsDevice: MonoBehaviour
 	public int BackSurfaceWidth = 1024;
     public int BackSurfaceHeight = 768;
 
+	const string _cFrontSurface = "frontSurface";
+	const string _czBufferSurface = "zBufferSurface";
+	const string _ciColorColor = "iClearColor";
+	const string _ciVertexBuffer = "iVertexBuffer";
+	const string _ciIndex32Buffer = "iIndex32Buffer";
+	const string _ciColorBuffer = "iColorBuffer";
+	const string _ciUV0Buffer = "iUV0Buffer";
+	const string _ciScreenSize = "iScreenSize";
+
     private void GeneratorIds() {
-        m_FrontTexId = Shader.PropertyToID("frontSurface");
-        m_ZBufTexId = Shader.PropertyToID("zBufferSurface");
-        m_ClearColorId = Shader.PropertyToID("iClearColor");
+		m_FrontTexId = Shader.PropertyToID(_cFrontSurface);
+		m_ZBufTexId = Shader.PropertyToID(_czBufferSurface);
+		m_ClearColorId = Shader.PropertyToID(_ciColorColor);
 
         // Buffer
-        m_VertexBufId = Shader.PropertyToID("iVertexBuffer");
-        m_IndexBufId = Shader.PropertyToID("iIndex32Buffer");
-        m_ColorBufId = Shader.PropertyToID("iColorBuffer");
-        m_UV0BufId = Shader.PropertyToID("iUV0Buffer");
-        m_Index32BufId = Shader.PropertyToID("iIndex32Buffer");
-        m_ScreenSizeId = Shader.PropertyToID("iScreenSize");
+		m_VertexBufId = Shader.PropertyToID(_ciVertexBuffer);
+		m_IndexBufId = Shader.PropertyToID(_ciIndex32Buffer);
+		m_ColorBufId = Shader.PropertyToID(_ciColorBuffer);
+		m_UV0BufId = Shader.PropertyToID(_ciUV0Buffer);
+		m_Index32BufId = Shader.PropertyToID(_ciIndex32Buffer);
+		m_ScreenSizeId = Shader.PropertyToID(_ciScreenSize);
     }
 
 	// 前缓冲
@@ -63,7 +72,11 @@ public class NsDevice: MonoBehaviour
 
     void InitDraw() {
         if (m_DeviceShader != null) {
+			#if UNITY_5_3_7
+			m_DeviceShader.SetInts(_ciScreenSize, BackSurfaceWidth, BackSurfaceHeight);
+			#else
             m_DeviceShader.SetInts(m_ScreenSizeId, BackSurfaceWidth, BackSurfaceHeight);
+			#endif
         }
     }
 
@@ -123,10 +136,16 @@ public class NsDevice: MonoBehaviour
 	{
 		if (m_DeviceShader != null && m_FrontSurface != null) {
 
-            m_DeviceShader.SetTexture(m_ClearKernal, m_FrontTexId, m_FrontSurface.Target);
-            m_DeviceShader.SetTexture(m_ClearKernal, m_ZBufTexId, m_FrontSurface.ZTarget);
-
+            
+			#if UNITY_5_3_7
+			m_DeviceShader.SetTexture(m_ClearKernal, _cFrontSurface, m_FrontSurface.Target); 
+			m_DeviceShader.SetTexture(m_ClearKernal, _czBufferSurface, m_FrontSurface.ZTarget);
+			m_DeviceShader.SetFloats(_ciColorColor, ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
+			#else
+			m_DeviceShader.SetTexture(m_ClearKernal, m_FrontTexId, m_FrontSurface.Target);
+			m_DeviceShader.SetTexture(m_ClearKernal, m_ZBufTexId, m_FrontSurface.ZTarget);
             m_DeviceShader.SetFloats(m_ClearColorId, ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
+			#endif
 			m_DeviceShader.Dispatch (m_ClearKernal, BackSurfaceWidth/32, BackSurfaceHeight/32, 1);
 		}
 	}
@@ -139,18 +158,26 @@ public class NsDevice: MonoBehaviour
     protected void BindVertexBuffer(NsVertexBuffer buffer) {
         if (m_CurVerBuf != buffer) {
             m_CurVerBuf = buffer;
-
+			#if UNITY_5_3_7
+			m_DeviceShader.SetBuffer(m_DrawBufKernal, _ciVertexBuffer, buffer.VertexBuf);
+			m_DeviceShader.SetBuffer(m_DrawBufKernal, _ciColorBuffer, buffer.ColorBuf);
+			m_DeviceShader.SetBuffer(m_DrawBufKernal, _ciUV0Buffer, buffer.UV0Buf);
+			#else
             m_DeviceShader.SetBuffer(m_DrawBufKernal, m_VertexBufId, buffer.VertexBuf);
             m_DeviceShader.SetBuffer(m_DrawBufKernal, m_ColorBufId, buffer.ColorBuf);
             m_DeviceShader.SetBuffer(m_DrawBufKernal, m_UV0BufId, buffer.UV0Buf);
+			#endif
         }
     }
 
     protected void BindIndex32Buffer(NsIndex32Buffer buffer) {
         if (m_CurIdxBuf != buffer) {
             m_CurIdxBuf = buffer;
-
+			#if UNITY_5_3_7
+			m_DeviceShader.SetBuffer(m_DrawBufKernal, _ciIndex32Buffer, buffer.Buffer);
+			#else
             m_DeviceShader.SetBuffer(m_DrawBufKernal, m_Index32BufId, buffer.Buffer);
+			#endif
         }
     }
 }
