@@ -15,5 +15,11 @@ public class LineShape : MonoBehaviour, ILightShape {
 
 	public void BuildShadowMesh (Light2D light, Mesh shadowMesh)
 	{
+		if ((shadowMesh == null) || (light == null))
+			return;
+		if (!IsVaild) {
+			shadowMesh.Clear ();
+			return;
+		}
 	}
 }
