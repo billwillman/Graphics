@@ -72,8 +72,8 @@ public class NsDevice: MonoBehaviour
 
     void InitDraw() {
         if (m_DeviceShader != null) {
-			#if UNITY_5_3_7
-			m_DeviceShader.SetInts(_ciScreenSize, BackSurfaceWidth, BackSurfaceHeight);
+            #if UNITY_5_3_7 || UNITY_5_3_8
+            m_DeviceShader.SetInts(_ciScreenSize, BackSurfaceWidth, BackSurfaceHeight);
 			#else
             m_DeviceShader.SetInts(m_ScreenSizeId, BackSurfaceWidth, BackSurfaceHeight);
 			#endif
@@ -136,9 +136,9 @@ public class NsDevice: MonoBehaviour
 	{
 		if (m_DeviceShader != null && m_FrontSurface != null) {
 
-            
-			#if UNITY_5_3_7
-			m_DeviceShader.SetTexture(m_ClearKernal, _cFrontSurface, m_FrontSurface.Target); 
+
+            #if UNITY_5_3_7 || UNITY_5_3_8
+            m_DeviceShader.SetTexture(m_ClearKernal, _cFrontSurface, m_FrontSurface.Target); 
 			m_DeviceShader.SetTexture(m_ClearKernal, _czBufferSurface, m_FrontSurface.ZTarget);
 			m_DeviceShader.SetFloats(_ciColorColor, ClearColor.r, ClearColor.g, ClearColor.b, ClearColor.a);
 			#else
@@ -158,7 +158,7 @@ public class NsDevice: MonoBehaviour
     protected void BindVertexBuffer(NsVertexBuffer buffer) {
         if (m_CurVerBuf != buffer) {
             m_CurVerBuf = buffer;
-			#if UNITY_5_3_7
+			#if UNITY_5_3_7 || UNITY_5_3_8
 			m_DeviceShader.SetBuffer(m_DrawBufKernal, _ciVertexBuffer, buffer.VertexBuf);
 			m_DeviceShader.SetBuffer(m_DrawBufKernal, _ciColorBuffer, buffer.ColorBuf);
 			m_DeviceShader.SetBuffer(m_DrawBufKernal, _ciUV0Buffer, buffer.UV0Buf);
@@ -173,8 +173,8 @@ public class NsDevice: MonoBehaviour
     protected void BindIndex32Buffer(NsIndex32Buffer buffer) {
         if (m_CurIdxBuf != buffer) {
             m_CurIdxBuf = buffer;
-			#if UNITY_5_3_7
-			m_DeviceShader.SetBuffer(m_DrawBufKernal, _ciIndex32Buffer, buffer.Buffer);
+            #if UNITY_5_3_7 || UNITY_5_3_8
+            m_DeviceShader.SetBuffer(m_DrawBufKernal, _ciIndex32Buffer, buffer.Buffer);
 			#else
             m_DeviceShader.SetBuffer(m_DrawBufKernal, m_Index32BufId, buffer.Buffer);
 			#endif
