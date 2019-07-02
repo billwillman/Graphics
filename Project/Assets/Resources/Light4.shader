@@ -158,13 +158,32 @@ Shader "Unlit/Light4"
 			}
 
 			// 点光源
-			half3 PointLight(half3 lightWorldPos, half3 worldVertex, half3 worldNormal, half3 lightColor
+			half3 PointLight(half3 lightWorldPos, half3 worldVertex, half3 worldNormal, half3 lightColor, half att
 #ifdef Specular_BlinnPhone
 				, half3 worldViewDir
 #endif
 			)
 			{
+				half3 lightDir = normalize(lightWorldPos - worldVertex);
+				/*-----------------漫反射-----------------------------*/
+#ifdef Diffuse_HalfLambert
+				// 半兰特模型
+				half3 diff = CalcLightDiffuse_HalfLambert(lightColor, _DiffuseColor, worldNormal, lightDir);
+#else
+				// 兰伯特模型
+				half3 diff = CalcLightDiffuse_Lambert(lightColor, _DiffuseColor, worldNormal, lightDir);
+#endif
+				/*-------------------高光模型-------------------------*/
+#ifdef Specular_BlinnPhone
+				half3 spec = CalcLightSpec_BlinnPhone(lightColor, _SpecularColor, _Gloss, lightDir, worldNormal, worldViewDir);
+#else
 
+				half3 spec = CalcLightSpec_Phone(lightColor, _SpecularColor, _Gloss, lightDir, worldNormal);
+#endif
+				/*----------------------------------------------------*/
+				half atter = CalcPointLightAtter(lightWorldPos, worldVertex) * att;
+				half3 ret = (diff + spec) * atter;
+				return ret;
 			}
 
             fixed4 frag (v2f i) : SV_Target
@@ -182,7 +201,34 @@ Shader "Unlit/Light4"
 					, worldViewDir
 #endif
 				);
-				half3 mixColor = ambient + directColor;
+
+				half3 lightPos1 = half3(unity_4LightPosX0.x, unity_4LightPosY0.x, unity_4LightPosZ0.x);
+				half3 lightPos2 = half3(unity_4LightPosX0.y, unity_4LightPosY0.y, unity_4LightPosZ0.y);
+				half3 lightPos3 = half3(unity_4LightPosX0.z, unity_4LightPosY0.z, unity_4LightPosZ0.z);
+				half3 lightPos4 = half3(unity_4LightPosX0.w, unity_4LightPosY0.w, unity_4LightPosZ0.w);
+
+				half3 light0Color = PointLight(lightPos1, i.worldVertex, worldNormal, unity_LightColor[0], unity_4LightAtten0.x
+#ifdef Specular_BlinnPhone 
+					, worldViewDir 
+#endif
+				);
+				half3 light1Color = PointLight(lightPos2, i.worldVertex, worldNormal, unity_LightColor[1], unity_4LightAtten0.y
+#ifdef Specular_BlinnPhone
+					, worldViewDir 
+#endif
+				);
+				half3 light2Color = PointLight(lightPos3, i.worldVertex, worldNormal, unity_LightColor[2], unity_4LightAtten0.z
+#ifdef Specular_BlinnPhone
+					, worldViewDir 
+#endif
+				);
+				half3 light3Color = PointLight(lightPos3, i.worldVertex, worldNormal, unity_LightColor[3], unity_4LightAtten0.w
+#ifdef Specular_BlinnPhone
+					, worldViewDir
+#endif
+				);
+
+				half3 mixColor = ambient + directColor + light0Color + light1Color + light2Color + light3Color;
 				fixed4 col = fixed4(mixColor, 1.0);
                 return col;
             }
