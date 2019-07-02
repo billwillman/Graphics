@@ -6,7 +6,8 @@ Shader "Unlit/Light4"
 {
     Properties
     {
-		_MainTex("Texture", 2D) = "white" {}
+		_MainTex("漫反射纹理", 2D) = "white" {}
+		_LightTexture("点光源衰减LUT", 2D) = "black" {}
 		// 漫反射顔色
 		_DiffuseColor("漫反射材质颜色", Color) = (1.0, 1.0, 1.0, 1.0)
 		_SpecularColor("高光材质颜色", Color) = (1.0, 1.0, 1.0, 1.0)
@@ -54,6 +55,7 @@ Shader "Unlit/Light4"
             };
 
             sampler2D _MainTex;
+			sampler2D _LightTexture;
             float4 _MainTex_ST;
 			half3 _DiffuseColor;
 			half3 _SpecularColor;
@@ -140,6 +142,17 @@ Shader "Unlit/Light4"
 			}
 
 			// 使用不重要光照颜色却强制使用逐像素光照(支持四种，但前提需要设置为非重要光源)
+			half CalcPointLightAtter(float4x4 lightMatrix, float3 worldVertex)
+			{
+				float3 lightCoord = mul(lightMatrix, float4(worldVertex, 1.0)).xyz;
+				half ret = tex2D(_LightTexture, dot(lightCoord, lightCoord).rr).UNITY_ATTEN_CHANNEL;
+			}
+
+			// 点光源
+			half3 PointLight()
+			{
+
+			}
 
             fixed4 frag (v2f i) : SV_Target
             {
