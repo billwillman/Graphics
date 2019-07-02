@@ -7,11 +7,15 @@ Shader "Unlit/Light4"
     Properties
     {
 		_MainTex("漫反射纹理", 2D) = "white" {}
-		_LightTexture("点光源衰减LUT", 2D) = "black" {}
 		// 漫反射顔色
 		_DiffuseColor("漫反射材质颜色", Color) = (1.0, 1.0, 1.0, 1.0)
 		_SpecularColor("高光材质颜色", Color) = (1.0, 1.0, 1.0, 1.0)
 		_Gloss("高光区域", Range(8, 100)) = 20
+
+		_fAttenuation0("点光源衰减因子1", Range(0.01, 1.0)) = 0.01
+		_fAttenuation1("点光源衰减因子2", Range(0.01, 1.0)) = 0.01
+		_fAttenuation2("点光源衰减因子3", Range(0.01, 1.0)) = 0.01
+
 		[Toggle(Diffuse_HalfLambert)] _HalfLambert("漫反射使用半兰特模型(否則 兰伯特模型)", Int) = 0
 		[Toggle(Specular_BlinnPhone)] _Specular_BlinnPhone("高光使用Blinn-Phone模型(否則 Phone模型)", Int) = 0
     }
@@ -60,6 +64,9 @@ Shader "Unlit/Light4"
 			half3 _DiffuseColor;
 			half3 _SpecularColor;
 			half _Gloss;
+			half _fAttenuation0;
+			half _fAttenuation1;
+			half _fAttenuation2;
 
             v2f vert (appdata v)
             {
@@ -142,14 +149,20 @@ Shader "Unlit/Light4"
 			}
 
 			// 使用不重要光照颜色却强制使用逐像素光照(支持四种，但前提需要设置为非重要光源)
-			half CalcPointLightAtter(float4x4 lightMatrix, float3 worldVertex)
+			half CalcPointLightAtter(half3 lightWorldPos, half3 worldVertex)
 			{
-				float3 lightCoord = mul(lightMatrix, float4(worldVertex, 1.0)).xyz;
-				half ret = tex2D(_LightTexture, dot(lightCoord, lightCoord).rr).UNITY_ATTEN_CHANNEL;
+				half3 lightDir = lightWorldPos - worldVertex;
+				float distance = length(lightDir);
+				half ret = 1.0 / (_fAttenuation0 + _fAttenuation1 * distance + pow(_fAttenuation2, 2));
+				return ret;
 			}
 
 			// 点光源
-			half3 PointLight()
+			half3 PointLight(half3 lightWorldPos, half3 worldVertex, half3 worldNormal, half3 lightColor
+#ifdef Specular_BlinnPhone
+				, half3 worldViewDir
+#endif
+			)
 			{
 
 			}
@@ -164,11 +177,12 @@ Shader "Unlit/Light4"
 				half3 diffColor = i.color * tex2D(_MainTex, i.uv);
                 // sample the texture
 				half3 ambient = AmbientLightColor();
-				half3 mixColor = ambient + DirectLightColor(worldNormal, diffColor, 1.0
+				half3 directColor = DirectLightColor(worldNormal, diffColor, 1.0
 #ifdef Specular_BlinnPhone
 					, worldViewDir
 #endif
 				);
+				half3 mixColor = ambient + directColor;
 				fixed4 col = fixed4(mixColor, 1.0);
                 return col;
             }
