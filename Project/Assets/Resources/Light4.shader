@@ -49,9 +49,7 @@ Shader "Unlit/Light4"
 				float2 uv : TEXCOORD0;
 				// 世界坐标系内法线向量
 				float3 worldNormal: TEXCOORD2;
-#ifdef Specular_BlinnPhone
-				float3 worldViewDir: TEXCOORD3;
-#endif
+				float3 worldVertex: TEXCOORD3;
 				float4 color: COLOR0;
             };
 
@@ -66,9 +64,7 @@ Shader "Unlit/Light4"
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
 				o.worldNormal = mul(v.normal, unity_WorldToObject);
-#ifdef Specular_BlinnPhone
-				o.worldViewDir = _WorldSpaceCameraPos.xyz - mul(unity_ObjectToWorld, v.vertex);
-#endif
+				o.worldVertex = mul(unity_ObjectToWorld, v.vertex);
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
 				o.color = v.color * float4(_DiffuseColor, 1.0);
                 return o;
@@ -149,7 +145,7 @@ Shader "Unlit/Light4"
             {
 				half3 worldNormal = normalize(i.worldNormal);
 #ifdef Specular_BlinnPhone
-				half3 worldViewDir = normalize(i.worldViewDir);
+				half3 worldViewDir = normalize(_WorldSpaceCameraPos.xyz - i.worldVertex);
 #endif
 
 				half3 diffColor = i.color * tex2D(_MainTex, i.uv);
