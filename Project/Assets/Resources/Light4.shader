@@ -19,12 +19,16 @@ Shader "Unlit/Light4"
 		_fAttenuation1("点光源衰减因子2", Range(0.01, 1.0)) = 0.01
 		_fAttenuation2("点光源衰减因子3", Range(0.01, 1.0)) = 0.01
 
+		_PointLightRange("自定义点光源范围", float) = 1.0
+		_PointLightIndensity("自定义点光源强度", float) = 1.0
+
 		[Toggle(Diffuse_HalfLambert)] _HalfLambert("漫反射使用半兰特模型(否則 兰伯特模型)", Int) = 0
 		[Toggle(Diffuse_PhoneLight)] _Diffuse_PhoneLight("平行光是否开启高光(否则不开启)", Int) = 0
 		[Toggle(Specular_PhoneLight)] _Specular_PhoneLight("点光源是否开启高光(否则不开启)", Int) = 0
 		[Toggle(Specular_BlinnPhone)] _Specular_BlinnPhone("高光使用Blinn-Phone模型(否則 Phone模型)", Int) = 0
 		[Toggle(Use_NormalMap)] _Use_NormalMap("使用NormalMap(否则 不使用法线贴图)", Int) = 0
 		[Toggle(Use_DetailTex)] _Use_DetailTex("使用细节纹理(否则 不使用细节纹理)", Int) = 0
+		[Toggle(Use_CustomPointAtter)] _Use_CustomPointAtter("使用自定义点光源强度/范围(否则 使用系统)", Int) = 0
     }
     SubShader
     {
@@ -50,6 +54,7 @@ Shader "Unlit/Light4"
 			#pragma shader_feature Specular_PhoneLight
 			#pragma shader_feature Use_NormalMap
 			#pragma shader_feature Use_DetailTex
+			#pragma shader_feature Use_CustomPointAtter
 
             struct appdata
             {
@@ -96,6 +101,9 @@ Shader "Unlit/Light4"
 			half _fAttenuation1;
 			half _fAttenuation2;
 			half _BumpScale;
+
+			half _PointLightRange;
+			half _PointLightIndensity;
 
             v2f vert (appdata v)
             {
@@ -209,8 +217,12 @@ Shader "Unlit/Light4"
 			{
 				half3 lightDir = lightWorldPos - worldVertex;
 				float distance = length(lightDir);
+#ifdef Use_CustomPointAtter
+				half ret = pow(((pow(_PointLightRange, 2) - pow(distance, 2)) / pow(_PointLightRange, 2)), 2) * pow(_PointLightIndensity / 2, 3);
+#else
 				half ret = 1.0 / (_fAttenuation0 + _fAttenuation1 * distance + pow(_fAttenuation2, 2)) * att;
 				return ret;
+#endif
 			}
 
 			// 点光源
