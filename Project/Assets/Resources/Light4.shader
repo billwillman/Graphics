@@ -18,6 +18,8 @@ Shader "Unlit/Light4"
 
 		[Toggle(Diffuse_HalfLambert)] _HalfLambert("漫反射使用半兰特模型(否則 兰伯特模型)", Int) = 0
 		[Toggle(Specular_BlinnPhone)] _Specular_BlinnPhone("高光使用Blinn-Phone模型(否則 Phone模型)", Int) = 0
+		[Toggle(Diffuse_PhoneLight)] _Diffuse_PhoneLight("平行光是否开启高光(否则不开启)", Int) = 0
+		[Toggle(Specular_PhoneLight)] _Specular_PhoneLight("点光源是否开启高光(否则不开启)", Int) = 0
     }
     SubShader
     {
@@ -38,7 +40,9 @@ Shader "Unlit/Light4"
 			// shader_feature
 			// multi_compile
 			#pragma shader_feature Diffuse_HalfLambert
+			#pragma shader_feature Diffuse_PhoneLight
 			#pragma shader_feature Specular_BlinnPhone
+			#pragma shader_feature Specular_PhoneLight
 
             struct appdata
             {
@@ -136,12 +140,16 @@ Shader "Unlit/Light4"
 				half3 diff = CalcLightDiffuse_Lambert(_LightColor0, _DiffuseColor, worldNormal, lightDir);
 #endif
 				diff *= diffColor;
+#ifdef Diffuse_PhoneLight
 				/*-------------------高光模型-------------------------*/
 #ifdef Specular_BlinnPhone
 				half3 spec = CalcLightSpec_BlinnPhone(_LightColor0, _SpecularColor, _Gloss, lightDir, worldNormal, worldViewDir);
 #else
 			
 				half3 spec = CalcLightSpec_Phone(_LightColor0, _SpecularColor, _Gloss, lightDir, worldNormal);
+#endif
+#else
+				half3 spec = half3(0, 0, 0);
 #endif
 				/*----------------------------------------------------*/
 				half3 ret = (diff + spec) * atter;
@@ -158,7 +166,7 @@ Shader "Unlit/Light4"
 			}
 
 			// 点光源
-			half3 PointLight(half3 lightWorldPos, half3 worldVertex, half3 worldNormal, half3 lightColor, half att
+			half3 PointLight(half3 lightWorldPos, half3 worldVertex, half3 worldNormal, half3 lightColor, half3 diffColor, half att
 #ifdef Specular_BlinnPhone
 				, half3 worldViewDir
 #endif
@@ -174,15 +182,20 @@ Shader "Unlit/Light4"
 				half3 diff = CalcLightDiffuse_Lambert(lightColor, _DiffuseColor, worldNormal, lightDir);
 #endif
 				/*-------------------高光模型-------------------------*/
-#ifdef Specular_BlinnPhone
+				// 是否点光源开启高光
+#ifdef Specular_PhoneLight
+	#ifdef Specular_BlinnPhone
 				half3 spec = CalcLightSpec_BlinnPhone(lightColor, _SpecularColor, _Gloss, lightDir, worldNormal, worldViewDir);
-#else
+	#else
 
 				half3 spec = CalcLightSpec_Phone(lightColor, _SpecularColor, _Gloss, lightDir, worldNormal);
+	#endif
+#else
+				half3 spec = half3(0, 0, 0);
 #endif
 				/*----------------------------------------------------*/
 				half atter = CalcPointLightAtter(lightWorldPos, worldVertex) * att;
-				half3 ret = (diff + spec) * atter;
+				half3 ret = (diff * diffColor + spec) * atter;
 				return ret;
 			}
 
@@ -207,22 +220,22 @@ Shader "Unlit/Light4"
 				half3 lightPos3 = half3(unity_4LightPosX0.z, unity_4LightPosY0.z, unity_4LightPosZ0.z);
 				half3 lightPos4 = half3(unity_4LightPosX0.w, unity_4LightPosY0.w, unity_4LightPosZ0.w);
 
-				half3 light0Color = PointLight(lightPos1, i.worldVertex, worldNormal, unity_LightColor[0], unity_4LightAtten0.x
+				half3 light0Color = PointLight(lightPos1, i.worldVertex, worldNormal, unity_LightColor[0], diffColor, unity_4LightAtten0.x
 #ifdef Specular_BlinnPhone 
 					, worldViewDir 
 #endif
 				);
-				half3 light1Color = PointLight(lightPos2, i.worldVertex, worldNormal, unity_LightColor[1], unity_4LightAtten0.y
+				half3 light1Color = PointLight(lightPos2, i.worldVertex, worldNormal, unity_LightColor[1], diffColor, unity_4LightAtten0.y
 #ifdef Specular_BlinnPhone
 					, worldViewDir 
 #endif
 				);
-				half3 light2Color = PointLight(lightPos3, i.worldVertex, worldNormal, unity_LightColor[2], unity_4LightAtten0.z
+				half3 light2Color = PointLight(lightPos3, i.worldVertex, worldNormal, unity_LightColor[2], diffColor, unity_4LightAtten0.z
 #ifdef Specular_BlinnPhone
 					, worldViewDir 
 #endif
 				);
-				half3 light3Color = PointLight(lightPos3, i.worldVertex, worldNormal, unity_LightColor[3], unity_4LightAtten0.w
+				half3 light3Color = PointLight(lightPos3, i.worldVertex, worldNormal, unity_LightColor[3], diffColor, unity_4LightAtten0.w
 #ifdef Specular_BlinnPhone
 					, worldViewDir
 #endif
