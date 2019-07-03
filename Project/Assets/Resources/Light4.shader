@@ -108,6 +108,7 @@ Shader "Unlit/Light4"
 				float3 p = cross(n, t) * v.t.w;
 				float3x3 mat;
 				// 要注意NORMALMAP的坐标系顺序，哪个是X，哪个是Y，哪个是Z。之前就是写错，以N为X,T为Y，P为Z（这是错的）
+				// 法线一般都是为蓝色，R,G,B中B表示蓝色，因为一般法线靠近B，所以NORMAL是用Z表示的
 				mat[0] = float3(t.x, p.x, n.x);
 				mat[1] = float3(t.y, p.y, n.y);
 				mat[2] = float3(t.z, p.z, n.z);
