@@ -241,6 +241,8 @@ Shader "Unlit/Light4"
 					, worldViewDir
 #endif
 				);
+			//	light3Color = half3(0, 0, 0);
+			//	light2Color = half3(0, 0, 0);
 
 				half3 mixColor = ambient + directColor + light0Color + light1Color + light2Color + light3Color;
 				fixed4 col = fixed4(mixColor, 1.0);
