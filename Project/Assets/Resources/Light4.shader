@@ -29,6 +29,7 @@ Shader "Unlit/Light4"
 		[Toggle(Use_NormalMap)] _Use_NormalMap("使用NormalMap(否则 不使用法线贴图)", Int) = 0
 		[Toggle(Use_DetailTex)] _Use_DetailTex("使用细节纹理(否则 不使用细节纹理)", Int) = 0
 		[Toggle(Use_CustomPointAtter)] _Use_CustomPointAtter("使用自定义点光源强度/范围(否则 使用系统)", Int) = 0
+		[Toggle(LightAdd_SrcAlphaMode)] _LightAdd_SrcAlphaMode("使用SrcAlpha+One模式混合多光源(否则使用One+One模式)", Int) = 0
     }
     SubShader
     {
@@ -55,6 +56,7 @@ Shader "Unlit/Light4"
 			#pragma shader_feature Use_NormalMap
 			#pragma shader_feature Use_DetailTex
 			#pragma shader_feature Use_CustomPointAtter
+			#pragma shader_feature LightAdd_SrcAlphaMode
 
             struct appdata
             {
@@ -221,12 +223,12 @@ Shader "Unlit/Light4"
 				half ret = pow(((pow(_PointLightRange, 2) - pow(distance, 2)) / pow(_PointLightRange, 2)), 2) * pow(_PointLightIndensity / 2, 3);
 #else
 				half ret = 1.0 / (_fAttenuation0 + _fAttenuation1 * distance + pow(_fAttenuation2, 2)) * att;
-				return ret;
 #endif
+				return ret;
 			}
 
 			// 点光源
-			half3 PointLight(half3 lightWorldPos, half3 worldVertex, half3 worldNormal, half3 lightColor, half3 diffColor, half att
+			half4 PointLight(half3 lightWorldPos, half3 worldVertex, half3 worldNormal, half3 lightColor, half3 diffColor, half att
 #ifdef Specular_BlinnPhone
 				, half3 worldViewDir
 #endif
@@ -255,7 +257,7 @@ Shader "Unlit/Light4"
 #endif
 				/*----------------------------------------------------*/
 				half atter = CalcPointLightAtter(lightWorldPos, worldVertex, att);
-				half3 ret = (diff * diffColor + spec) * atter;
+				half4 ret = half4(diff * diffColor + spec, 1.0) * atter;
 				return ret;
 			}
 
@@ -297,31 +299,39 @@ Shader "Unlit/Light4"
 				half3 lightPos3 = half3(unity_4LightPosX0.z, unity_4LightPosY0.z, unity_4LightPosZ0.z);
 				half3 lightPos4 = half3(unity_4LightPosX0.w, unity_4LightPosY0.w, unity_4LightPosZ0.w);
 
-				half3 light0Color = PointLight(lightPos1, worldVertex, worldNormal, unity_LightColor[0], diffColor, unity_4LightAtten0.x
+				half4 light0Color = PointLight(lightPos1, worldVertex, worldNormal, unity_LightColor[0], diffColor, unity_4LightAtten0.x
 #ifdef Specular_BlinnPhone 
 					, worldViewDir 
 #endif
 				);
-				half3 light1Color = PointLight(lightPos2, worldVertex, worldNormal, unity_LightColor[1], diffColor, unity_4LightAtten0.y
+				half4 light1Color = PointLight(lightPos2, worldVertex, worldNormal, unity_LightColor[1], diffColor, unity_4LightAtten0.y
 #ifdef Specular_BlinnPhone
 					, worldViewDir 
 #endif
 				);
-				half3 light2Color = PointLight(lightPos3, worldVertex, worldNormal, unity_LightColor[2], diffColor, unity_4LightAtten0.z
+				half4 light2Color = PointLight(lightPos3, worldVertex, worldNormal, unity_LightColor[2], diffColor, unity_4LightAtten0.z
 #ifdef Specular_BlinnPhone
 					, worldViewDir 
 #endif
 				);
-				half3 light3Color = PointLight(lightPos3, worldVertex, worldNormal, unity_LightColor[3], diffColor, unity_4LightAtten0.w
+				half4 light3Color = PointLight(lightPos3, worldVertex, worldNormal, unity_LightColor[3], diffColor, unity_4LightAtten0.w
 #ifdef Specular_BlinnPhone
 					, worldViewDir
 #endif
 				);
 			//	light3Color = half3(0, 0, 0);
 			//	light2Color = half3(0, 0, 0);
-
-				half3 mixColor = ambient + directColor + light0Color + light1Color + light2Color + light3Color;
+#ifdef _LightAdd_SrcAlphaMode
+				half3 mixColor = light0Color.rgb * light0Color.a + directColor;
+				mixColor = light1Color.rgb * light1Color.a + mixColor;
+				mixColor = light2Color.rgb * light2Color.a + mixColor;
+				mixColor = light3Color.rgb * light3Color.a + mixColor;
+				mixColor = ambient + mixColor;
 				fixed4 col = fixed4(mixColor, 1.0);
+#else
+				half3 mixColor = ambient + directColor + light0Color.rgb + light1Color.rgb + light2Color.rgb + light3Color.rgb;
+				fixed4 col = fixed4(mixColor, 1.0);
+#endif
                 return col;
             }
             ENDCG
