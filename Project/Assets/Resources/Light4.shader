@@ -221,9 +221,9 @@ Shader "Unlit/Light4"
 				float distance = length(lightDir);
 #ifdef Use_CustomPointAtter
 				//half ret = pow(((pow(_PointLightRange, 2) - pow(distance, 2)) / pow(_PointLightRange, 2)), 2) * pow(_PointLightIndensity / 2, 3);
-				half ret = (1.0 - distance / _PointLightRange) *  _PointLightIndensity;
+				half ret = saturate((1.0 - distance / _PointLightRange) *  _PointLightIndensity);
 #else
-				half ret = 1.0 / (_fAttenuation0 + _fAttenuation1 * distance + pow(_fAttenuation2, 2)) * att;
+				half ret = saturate(1.0 / (_fAttenuation0 + _fAttenuation1 * distance + pow(_fAttenuation2, 2)) * att);
 #endif
 				return ret;
 			}
@@ -258,7 +258,7 @@ Shader "Unlit/Light4"
 #endif
 				/*----------------------------------------------------*/
 				half atter = CalcPointLightAtter(lightWorldPos, worldVertex, att);
-				half4 ret = half4(diff * diffColor + spec, 1.0) * atter;
+				half4 ret = half4(diff * diffColor + spec, 1) * atter;
 				return ret;
 			}
 
@@ -289,11 +289,15 @@ Shader "Unlit/Light4"
 #endif
                 // sample the texture
 				half3 ambient = AmbientLightColor();
+#ifdef USING_DIRECTIONAL_LIGHT
 				half3 directColor = DirectLightColor(worldNormal, diffColor, 1.0
 #ifdef Specular_BlinnPhone
 					, worldViewDir
 #endif
 				);
+#else
+				half3 directColor = half3(0, 0, 0);
+#endif
 
 				half3 lightPos1 = half3(unity_4LightPosX0.x, unity_4LightPosY0.x, unity_4LightPosZ0.x);
 				half3 lightPos2 = half3(unity_4LightPosX0.y, unity_4LightPosY0.y, unity_4LightPosZ0.y);
@@ -305,6 +309,7 @@ Shader "Unlit/Light4"
 					, worldViewDir 
 #endif
 				);
+				//light0Color.a = 0.5f;
 				half4 light1Color = PointLight(lightPos2, worldVertex, worldNormal, unity_LightColor[1], diffColor, unity_4LightAtten0.y
 #ifdef Specular_BlinnPhone
 					, worldViewDir 
@@ -320,14 +325,19 @@ Shader "Unlit/Light4"
 					, worldViewDir
 #endif
 				);
-			//	light3Color = half3(0, 0, 0);
-			//	light2Color = half3(0, 0, 0);
+				//light0Color = half4(0, 0, 0, 0);
+				//light1Color = half4(0, 0, 0, 0);
+			//	light2Color = half4(0, 0, 0, 0);
+			   // light3Color = half4(0, 0, 0, 0);
+			//	directColor = half3(0, 0, 0);
+			//	ambient = half3(0, 0, 0);
 #ifdef _LightAdd_SrcAlphaMode
 				half3 mixColor = light0Color.rgb * light0Color.a + directColor;
 				mixColor = light1Color.rgb * light1Color.a + mixColor;
 				mixColor = light2Color.rgb * light2Color.a + mixColor;
 				mixColor = light3Color.rgb * light3Color.a + mixColor;
 				mixColor = ambient + mixColor;
+
 				fixed4 col = fixed4(mixColor, 1.0);
 #else
 				half3 mixColor = ambient + directColor + light0Color.rgb + light1Color.rgb + light2Color.rgb + light3Color.rgb;
