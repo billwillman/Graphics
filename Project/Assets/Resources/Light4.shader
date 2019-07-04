@@ -19,7 +19,7 @@ Shader "Unlit/Light4"
 		_fAttenuation1("点光源衰减因子2", Range(0.01, 1.0)) = 0.01
 		_fAttenuation2("点光源衰减因子3", Range(0.01, 1.0)) = 0.01
 
-		_PointLightRange("自定义点光源范围", float) = 1.0
+		_PointLightRange("自定义点光源范围", float) = 10.0
 		_PointLightIndensity("自定义点光源强度", float) = 1.0
 
 		[Toggle(Diffuse_HalfLambert)] _HalfLambert("漫反射使用半兰特模型(否則 兰伯特模型)", Int) = 0
@@ -220,7 +220,8 @@ Shader "Unlit/Light4"
 				half3 lightDir = lightWorldPos - worldVertex;
 				float distance = length(lightDir);
 #ifdef Use_CustomPointAtter
-				half ret = pow(((pow(_PointLightRange, 2) - pow(distance, 2)) / pow(_PointLightRange, 2)), 2) * pow(_PointLightIndensity / 2, 3);
+				//half ret = pow(((pow(_PointLightRange, 2) - pow(distance, 2)) / pow(_PointLightRange, 2)), 2) * pow(_PointLightIndensity / 2, 3);
+				half ret = (1.0 - distance / _PointLightRange) *  _PointLightIndensity;
 #else
 				half ret = 1.0 / (_fAttenuation0 + _fAttenuation1 * distance + pow(_fAttenuation2, 2)) * att;
 #endif
