@@ -22,7 +22,7 @@ Shader "Unlit/Light4"
 
 		_PointLightRange("自定义点光源范围", float) = 10.0
 		_PointLightIndensity("自定义点光源强度", float) = 1.0
-		_SHLightingScale("LightProbe缩放比", float) = 1.0
+		_SHLightingScale("LightProbe缩放比", float) = 0.5
 
 		[Toggle(Diffuse_HalfLambert)] _HalfLambert("漫反射使用半兰特模型(否則 兰伯特模型)", Int) = 0
 		[Toggle(Diffuse_PhoneLight)] _Diffuse_PhoneLight("平行光是否开启高光(否则不开启)", Int) = 0
@@ -89,6 +89,9 @@ Shader "Unlit/Light4"
 				float3 worldNormal: TEXCOORD2;
 #endif
 				float4 color: COLOR0;
+#if defined(Use_LightProbe) && !defined(LIGHTMAP_ON)
+			//	float3 shlight: COLOR1;
+#endif
             };
 
 			// 漫反射贴图
@@ -147,8 +150,8 @@ Shader "Unlit/Light4"
 				o.color = v.color * float4(_DiffuseColor, 1.0);
 
 #if defined(Use_LightProbe) && !defined(LIGHTMAP_ON)
-				float3 worldNormal = mul(v.normal, unity_WorldToObject);
-				o.color.rgb *= ShadeSH9(float4(worldNormal, 1.0)) * _SHLightingScale;
+		//		float3 worldNormal = mul(v.normal, unity_WorldToObject);
+			//	o.shlight = ShadeSH9(float4(worldNormal, 1.0)) * _SHLightingScale;
 #endif
                 return o;
             }
@@ -362,6 +365,11 @@ Shader "Unlit/Light4"
 #if defined(Use_LightMap) && defined(LIGHTMAP_ON)
 				// 计算LIGHTMAP
 				col.rgb += lm.rgb;
+#endif
+
+#if defined(Use_LightProbe) && !defined(LIGHTMAP_ON)
+				col.rgb += ShadeSH9(float4(worldNormal, 1.0)) * _SHLightingScale;
+			//	col.rgb += i.shlight;
 #endif
 
                 return col;
