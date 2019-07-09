@@ -1,4 +1,6 @@
-﻿// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
+﻿// Upgrade NOTE: replaced tex2D unity_Lightmap with UNITY_SAMPLE_TEX2D
+
+// Upgrade NOTE: replaced '_Object2World' with 'unity_ObjectToWorld'
 
 // Upgrade NOTE: replaced '_World2Object' with 'unity_WorldToObject'
 
@@ -8,7 +10,6 @@ Shader "Unlit/Light4"
     {
 		_MainTex("漫反射纹理", 2D) = "white" {}
 		_NormalTex("法线纹理", 2D) = "none" {}
-		_DetailTex("细节贴图", 2D) = "none" {}
 		_BumpScale("法线纹理缩放", float) = 1.0
 		// 漫反射顔色
 		_DiffuseColor("漫反射材质颜色", Color) = (1.0, 1.0, 1.0, 1.0)
@@ -21,15 +22,18 @@ Shader "Unlit/Light4"
 
 		_PointLightRange("自定义点光源范围", float) = 10.0
 		_PointLightIndensity("自定义点光源强度", float) = 1.0
+		_SHLightingScale("LightProbe缩放比", float) = 1.0
 
 		[Toggle(Diffuse_HalfLambert)] _HalfLambert("漫反射使用半兰特模型(否則 兰伯特模型)", Int) = 0
 		[Toggle(Diffuse_PhoneLight)] _Diffuse_PhoneLight("平行光是否开启高光(否则不开启)", Int) = 0
 		[Toggle(Specular_PhoneLight)] _Specular_PhoneLight("点光源是否开启高光(否则不开启)", Int) = 0
 		[Toggle(Specular_BlinnPhone)] _Specular_BlinnPhone("高光使用Blinn-Phone模型(否則 Phone模型)", Int) = 0
 		[Toggle(Use_NormalMap)] _Use_NormalMap("使用NormalMap(否则 不使用法线贴图)", Int) = 0
-		[Toggle(Use_DetailTex)] _Use_DetailTex("使用细节纹理(否则 不使用细节纹理)", Int) = 0
 		[Toggle(Use_CustomPointAtter)] _Use_CustomPointAtter("使用自定义点光源强度/范围(否则 使用系统)", Int) = 0
 		[Toggle(LightAdd_SrcAlphaMode)] _LightAdd_SrcAlphaMode("使用SrcAlpha+One模式混合多光源(否则使用One+One模式)", Int) = 0
+		// 必须是LightStatic才行
+		[Toggle(Use_LightMap)] _Use_LightMap("LightStatic使用LightMap(否则不使用)", Int) = 0
+		[Toggle(Use_LightProbe)] _Use_LightProbe("动态物体使用LightProbe(否则不使用)", Int) = 0
     }
     SubShader
     {
@@ -54,9 +58,10 @@ Shader "Unlit/Light4"
 			#pragma shader_feature Specular_BlinnPhone
 			#pragma shader_feature Specular_PhoneLight
 			#pragma shader_feature Use_NormalMap
-			#pragma shader_feature Use_DetailTex
 			#pragma shader_feature Use_CustomPointAtter
 			#pragma shader_feature LightAdd_SrcAlphaMode
+			#pragma shader_feature Use_LightMap
+			#pragma shader_feature Use_LightProbe
 
             struct appdata
             {
@@ -90,12 +95,9 @@ Shader "Unlit/Light4"
             sampler2D _MainTex;
 			// 法线贴图
 			sampler2D _NormalTex;
-			// 细节贴图
-			sampler2D _DetailTex;
 
 
             float4 _MainTex_ST;
-			float4 _DetailTex_ST;
 			half3 _DiffuseColor;
 			half3 _SpecularColor;
 			half _Gloss;
@@ -106,6 +108,7 @@ Shader "Unlit/Light4"
 
 			half _PointLightRange;
 			half _PointLightIndensity;
+			half _SHLightingScale;
 
             v2f vert (appdata v)
             {
@@ -136,8 +139,17 @@ Shader "Unlit/Light4"
 #endif
 				
                 o.uv.xy = TRANSFORM_TEX(v.uv, _MainTex);
-				o.uv.zw = TRANSFORM_TEX(v.uv2, _DetailTex);
+
+				// 只有LightStatic才能用LIGHTMAP， 动态物体只能通过LightProbe使用球协函数计算光照
+#if defined(Use_LightMap) && defined(LIGHTMAP_ON)
+				o.uv.zw = v.uv2.xy * unity_LightmapST.xy + unity_LightmapST.zw;
+#endif
 				o.color = v.color * float4(_DiffuseColor, 1.0);
+
+#if defined(Use_LightProbe) && !defined(LIGHTMAP_ON)
+				float3 worldNormal = mul(v.normal, unity_WorldToObject);
+				o.color.rgb *= ShadeSH9(float4(worldNormal, 1.0)) * _SHLightingScale;
+#endif
                 return o;
             }
 
@@ -283,10 +295,12 @@ Shader "Unlit/Light4"
 
 				half4 diffColor = i.color * tex2D(_MainTex, i.uv.xy);
 
-// 细节纹理
-#ifdef Use_DetailTex
-
+#if defined(Use_LightMap) && defined(LIGHTMAP_ON)
+				
+				fixed3 lm = DecodeLightmap(UNITY_SAMPLE_TEX2D(unity_Lightmap, i.uv.zw));
+				lm.rgb *= diffColor.rgb;
 #endif
+
                 // sample the texture
 				half3 ambient = AmbientLightColor();
 #ifdef USING_DIRECTIONAL_LIGHT
@@ -330,7 +344,8 @@ Shader "Unlit/Light4"
 			//	light2Color = half4(0, 0, 0, 0);
 			   // light3Color = half4(0, 0, 0, 0);
 			//	directColor = half3(0, 0, 0);
-			//	ambient = half3(0, 0, 0);
+			//	ambient = half3(0, 0, 0)
+
 #ifdef _LightAdd_SrcAlphaMode
 				half3 mixColor = light0Color.rgb * light0Color.a + directColor;
 				mixColor = light1Color.rgb * light1Color.a + mixColor;
@@ -343,6 +358,12 @@ Shader "Unlit/Light4"
 				half3 mixColor = ambient + directColor + light0Color.rgb + light1Color.rgb + light2Color.rgb + light3Color.rgb;
 				fixed4 col = fixed4(mixColor, 1.0);
 #endif
+
+#if defined(Use_LightMap) && defined(LIGHTMAP_ON)
+				// 计算LIGHTMAP
+				col.rgb += lm.rgb;
+#endif
+
                 return col;
             }
             ENDCG
