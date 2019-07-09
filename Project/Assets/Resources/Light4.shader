@@ -367,7 +367,7 @@ Shader "Unlit/Light4"
 				col.rgb += lm.rgb;
 #endif
 
-#if defined(Use_LightProbe) && !defined(LIGHTMAP_ON)
+#if defined(Use_LightProbe) && defined(LIGHTMAP_OFF)
 				col.rgb += ShadeSH9(float4(worldNormal, 1.0)) * _SHLightingScale;
 			//	col.rgb += i.shlight;
 #endif
