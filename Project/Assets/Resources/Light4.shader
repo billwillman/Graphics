@@ -22,7 +22,7 @@ Shader "Unlit/Light4"
 
 		_PointLightRange("自定义点光源范围", float) = 10.0
 		_PointLightIndensity("自定义点光源强度", float) = 1.0
-		_SHLightingScale("LightProbe缩放比", float) = 0.5
+		_SHLightingScale("LightProbe缩放比", float) = 1
 
 		[Toggle(Diffuse_HalfLambert)] _HalfLambert("漫反射使用半兰特模型(否則 兰伯特模型)", Int) = 0
 		[Toggle(Diffuse_PhoneLight)] _Diffuse_PhoneLight("平行光是否开启高光(否则不开启)", Int) = 0
@@ -368,8 +368,8 @@ Shader "Unlit/Light4"
 #endif
 
 #if defined(Use_LightProbe) && defined(LIGHTMAP_OFF)
-				col.rgb += ShadeSH9(float4(worldNormal, 1.0)) * _SHLightingScale;
-			//	col.rgb += i.shlight;
+				half3 sh3 = ShadeSH9(float4(worldNormal, 1.0)) * _SHLightingScale;
+				col.rgb += sh3 * diffColor;
 #endif
 
                 return col;
