@@ -35,6 +35,7 @@ Shader "Unlit/Light4"
 		[Toggle(Use_LightMap)] _Use_LightMap("LightStatic使用LightMap(否则不使用)", Int) = 0
 		[Toggle(Use_LightProbe)] _Use_LightProbe("动态物体使用LightProbe(否则不使用)", Int) = 0
 		[Toggle(Use_ReceiveShadow)] _Use_ReceiveShadow("使用接受阴影效果(否则不接受)", Int) = 0
+		[Toggle(Use_WaterPlane)] _Use_WaterPlane("使用潮湿的效果(否则不使用)", Int) = 0
     }
     SubShader
     {
@@ -66,6 +67,7 @@ Shader "Unlit/Light4"
 			#pragma shader_feature Use_LightMap
 			#pragma shader_feature Use_LightProbe
 			#pragma shader_feature Use_ReceiveShadow
+			#pragma shader_feature Use_WaterPlane
 
             struct appdata
             {
@@ -120,6 +122,16 @@ Shader "Unlit/Light4"
 			half _PointLightIndensity;
 			half _SHLightingScale;
 
+#ifdef Use_WaterPlane
+			void DoWetShading(inout float3 albedo, inout float gloss, float wetLevel)
+			{
+				// 越潮湿，地面越暗。 *diffuseColor
+				albedo *= lerp(1.0, 0.3, wetLevel);
+				//越潮湿，gloss越大，镜面反射更明亮，高光凝聚度更高。*gloss
+				gloss = min(gloss * lerp(1.0, 2.5, wetLevel), 1.0);
+			}
+#endif
+
             v2f vert (appdata v)
             {
                 v2f o;
@@ -155,6 +167,13 @@ Shader "Unlit/Light4"
 				o.uv.zw = v.uv2.xy * unity_LightmapST.xy + unity_LightmapST.zw;
 #endif
 				o.color = v.color * float4(_DiffuseColor, 1.0);
+#ifdef Use_WaterPlane
+				float3 albedo = float3(1, 1, 1);
+				float gloss = 1;
+				DoWetShading(albedo, gloss, 1);
+				o.color.rgb *= albedo;
+				_Gloss *= gloss;
+#endif
 
 #ifdef Use_ReceiveShadow
 				TRANSFER_SHADOW(o);
