@@ -16,20 +16,20 @@ Shader "Unlit/Light4"
 		_SpecularColor("高光材质颜色", Color) = (1.0, 1.0, 1.0, 1.0)
 		_Gloss("高光区域", Range(0.1, 100)) = 20
 
-		_fAttenuation0("点光源衰减因子1", Range(0.01, 1.0)) = 0.01
-		_fAttenuation1("点光源衰减因子2", Range(0.01, 1.0)) = 0.01
-		_fAttenuation2("点光源衰减因子3", Range(0.01, 1.0)) = 0.01
+		_fAttenuation0("点光源衰减因子1(实时光)", Range(0.01, 1.0)) = 0.01
+		_fAttenuation1("点光源衰减因子2(实时光)", Range(0.01, 1.0)) = 0.01
+		_fAttenuation2("点光源衰减因子3(实时光)", Range(0.01, 1.0)) = 0.01
 
-		_PointLightRange("自定义点光源范围", float) = 10.0
-		_PointLightIndensity("自定义点光源强度", float) = 1.0
+		_PointLightRange("自定义点光源范围(实时光)", float) = 10.0
+		_PointLightIndensity("自定义点光源强度(实时光)", float) = 1.0
 		_SHLightingScale("LightProbe缩放比", float) = 1
 
-		[Toggle(Diffuse_HalfLambert)] _HalfLambert("漫反射使用半兰特模型(否則 兰伯特模型)", Int) = 0
-		[Toggle(Diffuse_PhoneLight)] _Diffuse_PhoneLight("平行光是否开启高光(否则不开启)", Int) = 0
-		[Toggle(Specular_PhoneLight)] _Specular_PhoneLight("点光源是否开启高光(否则不开启)", Int) = 0
-		[Toggle(Specular_BlinnPhone)] _Specular_BlinnPhone("高光使用Blinn-Phone模型(否則 Phone模型)", Int) = 0
+		[Toggle(Diffuse_HalfLambert)] _HalfLambert("漫反射使用半兰特模型(否則 兰伯特模型)(实时光)", Int) = 0
+		[Toggle(Diffuse_PhoneLight)] _Diffuse_PhoneLight("平行光是否开启高光(否则不开启)(实时光)", Int) = 0
+		[Toggle(Specular_PhoneLight)] _Specular_PhoneLight("点光源是否开启高光(否则不开启)(实时光)", Int) = 0
+		[Toggle(Specular_BlinnPhone)] _Specular_BlinnPhone("高光使用Blinn-Phone模型(否則 Phone模型)(实时光)", Int) = 0
 		[Toggle(Use_NormalMap)] _Use_NormalMap("使用NormalMap(否则 不使用法线贴图)", Int) = 0
-		[Toggle(Use_CustomPointAtter)] _Use_CustomPointAtter("使用自定义点光源强度/范围(否则 使用系统)", Int) = 0
+		[Toggle(Use_CustomPointAtter)] _Use_CustomPointAtter("使用自定义点光源强度/范围(否则 使用系统)(实时光)", Int) = 0
 		[Toggle(LightAdd_SrcAlphaMode)] _LightAdd_SrcAlphaMode("使用SrcAlpha+One模式混合多光源(否则使用One+One模式)", Int) = 0
 		// 必须是LightStatic才行
 		[Toggle(Use_LightMap)] _Use_LightMap("LightStatic使用LightMap(否则不使用)", Int) = 0
