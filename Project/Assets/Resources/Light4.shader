@@ -34,6 +34,7 @@ Shader "Unlit/Light4"
 		// 必须是LightStatic才行
 		[Toggle(Use_LightMap)] _Use_LightMap("LightStatic使用LightMap(否则不使用)", Int) = 0
 		[Toggle(Use_LightProbe)] _Use_LightProbe("动态物体使用LightProbe(否则不使用)", Int) = 0
+		[Toggle(Use_ReceiveShadow)] _Use_ReceiveShadow("使用接受阴影效果(否则不接受)", Int) = 0
     }
     SubShader
     {
@@ -51,6 +52,8 @@ Shader "Unlit/Light4"
 
             #include "UnityCG.cginc"
 			#include "Lighting.cginc"
+			#include "AutoLight.cginc"
+
 			// shader_feature
 			// multi_compile
 			#pragma shader_feature Diffuse_HalfLambert
@@ -62,6 +65,7 @@ Shader "Unlit/Light4"
 			#pragma shader_feature LightAdd_SrcAlphaMode
 			#pragma shader_feature Use_LightMap
 			#pragma shader_feature Use_LightProbe
+			#pragma shader_feature Use_ReceiveShadow
 
             struct appdata
             {
@@ -77,21 +81,24 @@ Shader "Unlit/Light4"
 
             struct v2f
             {
-                float4 vertex : SV_POSITION;
+                float4 pos : SV_POSITION;
 				float4 uv : TEXCOORD0;
 #if Use_NormalMap
 				float4 TtoW0: TEXCOORD1;
 				float4 TtoW1: TEXCOORD2;
 				float4 TtoW2: TEXCOORD3;
+#ifdef Use_ReceiveShadow
+				SHADOW_COORDS(4)
+#endif
 #else
 				float3 worldVertex: TEXCOORD1;
 				// 世界坐标系内法线向量
 				float3 worldNormal: TEXCOORD2;
+#ifdef Use_ReceiveShadow
+				SHADOW_COORDS(3)
+#endif
 #endif
 				float4 color: COLOR0;
-#if defined(Use_LightProbe) && !defined(LIGHTMAP_ON)
-			//	float3 shlight: COLOR1;
-#endif
             };
 
 			// 漫反射贴图
@@ -116,7 +123,7 @@ Shader "Unlit/Light4"
             v2f vert (appdata v)
             {
                 v2f o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.pos = UnityObjectToClipPos(v.vertex);
 #ifdef Use_NormalMap
 				
 				float3 t = v.t.xyz;
@@ -149,10 +156,10 @@ Shader "Unlit/Light4"
 #endif
 				o.color = v.color * float4(_DiffuseColor, 1.0);
 
-#if defined(Use_LightProbe) && !defined(LIGHTMAP_ON)
-		//		float3 worldNormal = mul(v.normal, unity_WorldToObject);
-			//	o.shlight = ShadeSH9(float4(worldNormal, 1.0)) * _SHLightingScale;
+#ifdef Use_ReceiveShadow
+				TRANSFER_SHADOW(o);
 #endif
+
                 return o;
             }
 
@@ -304,10 +311,17 @@ Shader "Unlit/Light4"
 				lm.rgb *= diffColor.rgb;
 #endif
 
+				// 注意阴影的混合计算（乘法）计算不能直接对最终结果col乘法，不能和Amibent乘法，所有颜色乘法混合都要抛开Amibent
+#ifdef Use_ReceiveShadow
+				half globalAtt = SHADOW_ATTENUATION(i);
+#else
+				half globalAtt = 1.0;
+#endif
+
                 // sample the texture
 				half3 ambient = AmbientLightColor();
 #ifdef USING_DIRECTIONAL_LIGHT
-				half3 directColor = DirectLightColor(worldNormal, diffColor, 1.0
+				half3 directColor = DirectLightColor(worldNormal, diffColor, globalAtt
 #ifdef Specular_BlinnPhone
 					, worldViewDir
 #endif
@@ -321,23 +335,23 @@ Shader "Unlit/Light4"
 				half3 lightPos3 = half3(unity_4LightPosX0.z, unity_4LightPosY0.z, unity_4LightPosZ0.z);
 				half3 lightPos4 = half3(unity_4LightPosX0.w, unity_4LightPosY0.w, unity_4LightPosZ0.w);
 
-				half4 light0Color = PointLight(lightPos1, worldVertex, worldNormal, unity_LightColor[0], diffColor, unity_4LightAtten0.x
+				half4 light0Color = PointLight(lightPos1, worldVertex, worldNormal, unity_LightColor[0], diffColor, unity_4LightAtten0.x * globalAtt
 #ifdef Specular_BlinnPhone 
 					, worldViewDir 
 #endif
 				);
 				//light0Color.a = 0.5f;
-				half4 light1Color = PointLight(lightPos2, worldVertex, worldNormal, unity_LightColor[1], diffColor, unity_4LightAtten0.y
+				half4 light1Color = PointLight(lightPos2, worldVertex, worldNormal, unity_LightColor[1], diffColor, unity_4LightAtten0.y * globalAtt
 #ifdef Specular_BlinnPhone
 					, worldViewDir 
 #endif
 				);
-				half4 light2Color = PointLight(lightPos3, worldVertex, worldNormal, unity_LightColor[2], diffColor, unity_4LightAtten0.z
+				half4 light2Color = PointLight(lightPos3, worldVertex, worldNormal, unity_LightColor[2], diffColor, unity_4LightAtten0.z * globalAtt
 #ifdef Specular_BlinnPhone
 					, worldViewDir 
 #endif
 				);
-				half4 light3Color = PointLight(lightPos3, worldVertex, worldNormal, unity_LightColor[3], diffColor, unity_4LightAtten0.w
+				half4 light3Color = PointLight(lightPos3, worldVertex, worldNormal, unity_LightColor[3], diffColor, unity_4LightAtten0.w * globalAtt
 #ifdef Specular_BlinnPhone
 					, worldViewDir
 #endif
