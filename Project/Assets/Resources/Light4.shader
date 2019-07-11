@@ -10,6 +10,7 @@ Shader "Unlit/Light4"
     {
 		_MainTex("漫反射纹理", 2D) = "white" {}
 		_NormalTex("法线纹理", 2D) = "none" {}
+		_RampTex("Ramp纹理", 2D) = "black" {}
 		_BumpScale("法线纹理缩放", float) = 1.0
 		// 漫反射顔色
 		_DiffuseColor("漫反射材质颜色", Color) = (1.0, 1.0, 1.0, 1.0)
@@ -36,6 +37,7 @@ Shader "Unlit/Light4"
 		[Toggle(Use_LightProbe)] _Use_LightProbe("动态物体使用LightProbe(否则不使用)", Int) = 0
 		[Toggle(Use_ReceiveShadow)] _Use_ReceiveShadow("使用接受阴影效果(否则不接受)", Int) = 0
 		[Toggle(Use_WaterPlane)] _Use_WaterPlane("使用潮湿的效果(否则不使用)", Int) = 0
+		[Toggle(Use_RampTex)] _Use_RampTex("使用RampTex(否则不使用)", Int) = 0
     }
     SubShader
     {
@@ -68,6 +70,7 @@ Shader "Unlit/Light4"
 			#pragma shader_feature Use_LightProbe
 			#pragma shader_feature Use_ReceiveShadow
 			#pragma shader_feature Use_WaterPlane
+			#pragma shader_feature Use_RampTex
 
             struct appdata
             {
@@ -107,6 +110,7 @@ Shader "Unlit/Light4"
             sampler2D _MainTex;
 			// 法线贴图
 			sampler2D _NormalTex;
+			sampler2D _RampTex;
 
 
             float4 _MainTex_ST;
@@ -191,14 +195,22 @@ Shader "Unlit/Light4"
 			// 计算漫反射(兰伯特模型)
 			half3 CalcLightDiffuse_Lambert(half3 lightColor, half3 diffColor, half3 worldNomral, half3 lightDir)
 			{
-				half3 ret = lightColor * diffColor * max(0, dot(worldNomral, lightDir));
+				half lcolor = max(0, dot(worldNomral, lightDir));
+#ifdef Use_RampTex
+				lcolor = tex2D(_RampTex, half2(lcolor, lcolor)).rgb;
+#endif
+				half3 ret = lightColor * diffColor * lcolor;
 				return ret;
 			}
 
 			// 计算漫反射（半兰特模型）
 			half3 CalcLightDiffuse_HalfLambert(half3 lightColor, half3 diffColor, half3 worldNomral, half3 lightDir)
 			{
-				half3 ret = lightColor * diffColor * (0.5 * dot(worldNomral, lightDir) + 0.5);
+				half lcolor = (0.5 * dot(worldNomral, lightDir) + 0.5);
+#ifdef Use_RampTex
+				lcolor = tex2D(_RampTex, half2(lcolor, lcolor)).rgb;
+#endif
+				half3 ret = lightColor * diffColor * lcolor;
 				return ret;
 			}
 
