@@ -38,6 +38,7 @@ Shader "Unlit/Light4"
 		[Toggle(Use_ReceiveShadow)] _Use_ReceiveShadow("使用接受阴影效果(否则不接受)", Int) = 0
 		[Toggle(Use_WaterPlane)] _Use_WaterPlane("使用潮湿的效果(否则不使用)", Int) = 0
 		[Toggle(Use_RampTex)] _Use_RampTex("使用RampTex(否则不使用)", Int) = 0
+		[Toggle(Use_CustomFog)] _Use_CustomFog("使用距离雾效(否则不使用)", Int) = 0
     }
     SubShader
     {
@@ -71,6 +72,7 @@ Shader "Unlit/Light4"
 			#pragma shader_feature Use_ReceiveShadow
 			#pragma shader_feature Use_WaterPlane
 			#pragma shader_feature Use_RampTex
+			#pragma shader_feature Use_CustomFog
 
             struct appdata
             {
@@ -104,6 +106,9 @@ Shader "Unlit/Light4"
 #endif
 #endif
 				float4 color: COLOR0;
+#ifdef Use_CustomFog
+				float4 fogLerp: COLOR1;
+#endif
             };
 
 			// 漫反射贴图
@@ -126,6 +131,27 @@ Shader "Unlit/Light4"
 			half _PointLightIndensity;
 			half _SHLightingScale;
 
+#ifdef Use_CustomFog
+			// 距离雾效
+			half _DepthFogStart;
+			half _DepthFogRange;
+			half _DepthFogDensity;
+			half _HeightFogStart;
+			half _HeightFogRange;
+			half4 _DepthFogColor;
+		   //--------------
+
+		   // 顶点雾
+			half CalculateFogVS(half3 vertexWorldPos)
+			{
+				half3 distance = vertexWorldPos - _WorldSpaceCameraPos;
+				half depthFog = saturate((length(distance) - _DepthFogStart) * _DepthFogRange);
+				depthFog *= _DepthFogDensity;
+				half heightFog = saturate((_HeightFogStart - distance.y) * _HeightFogRange);
+				return saturate(depthFog + heightFog);
+			}
+#endif
+
 #ifdef Use_WaterPlane
 			void DoWetShading(inout float3 albedo, inout float gloss, float wetLevel)
 			{
@@ -140,6 +166,7 @@ Shader "Unlit/Light4"
             {
                 v2f o;
                 o.pos = UnityObjectToClipPos(v.vertex);
+				float3 worldVertex;
 #ifdef Use_NormalMap
 				
 				float3 t = v.t.xyz;
@@ -154,7 +181,7 @@ Shader "Unlit/Light4"
 				mat = mul(unity_ObjectToWorld, mat); // 切线空间到模型坐标空间再到世界空间
 				
 
-				float3 worldVertex = mul(unity_ObjectToWorld, v.vertex);
+				worldVertex = mul(unity_ObjectToWorld, v.vertex);
 
 				o.TtoW0 = float4(mat[0], worldVertex.x);
 				o.TtoW1 = float4(mat[1], worldVertex.y);
@@ -162,6 +189,8 @@ Shader "Unlit/Light4"
 #else
 				o.worldNormal = mul(v.normal, unity_WorldToObject);
 				o.worldVertex = mul(unity_ObjectToWorld, v.vertex);
+
+				worldVertex = o.worldVertex;
 #endif
 				
                 o.uv.xy = TRANSFORM_TEX(v.uv, _MainTex);
@@ -171,6 +200,7 @@ Shader "Unlit/Light4"
 				o.uv.zw = v.uv2.xy * unity_LightmapST.xy + unity_LightmapST.zw;
 #endif
 				o.color = v.color * float4(_DiffuseColor, 1.0);
+				
 #ifdef Use_WaterPlane
 				float3 albedo = float3(1, 1, 1);
 				float gloss = 1;
@@ -181,6 +211,11 @@ Shader "Unlit/Light4"
 
 #ifdef Use_ReceiveShadow
 				TRANSFER_SHADOW(o);
+#endif
+
+#ifdef Use_CustomFog
+				o.fogLerp.r = CalculateFogVS(worldVertex);
+				//o.color.rgb = lerp(o.color.rgb, _DepthFogColor, o.fogLerp.r);
 #endif
 
                 return o;
@@ -333,8 +368,12 @@ Shader "Unlit/Light4"
 #ifdef Specular_BlinnPhone
 				half3 worldViewDir = normalize(_WorldSpaceCameraPos.xyz - worldVertex);
 #endif
+				half4 c = i.color;
+#ifdef Use_CustomFog
+				c.rgb = lerp(c.rgb, _DepthFogColor, i.fogLerp.r);
+#endif
 
-				half4 diffColor = i.color * tex2D(_MainTex, i.uv.xy);
+				half4 diffColor = c * tex2D(_MainTex, i.uv.xy);
 
 #if defined(Use_LightMap) && defined(LIGHTMAP_ON)
 				

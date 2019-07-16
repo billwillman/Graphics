@@ -66,12 +66,14 @@
     <Compile Include="Assets\Light\LightShadow.cs" />
     <Compile Include="Assets\Light\LightShadows.cs" />
     <Compile Include="Assets\Light\LineShape.cs" />
+    <Compile Include="Assets\Script\CommandBufferBlurRefraction.cs" />
     <Compile Include="Assets\Script\Core\NsCamera.cs" />
     <Compile Include="Assets\Script\Core\NsDevice.cs" />
     <Compile Include="Assets\Script\Core\NsIBuffer.cs" />
     <Compile Include="Assets\Script\Core\NsIndexBuffer.cs" />
     <Compile Include="Assets\Script\Core\NsSurface.cs" />
     <Compile Include="Assets\Script\Core\NsVertexBuffer.cs" />
+    <Compile Include="Assets\Script\DistanceFog\DistanceFog.cs" />
     <Compile Include="Assets\Script\SignFieldDistanceShadow\sdGameObj.cs" />
     <Compile Include="Assets\Script\SignFieldDistanceShadow\sdSphere.cs" />
     <Compile Include="Assets\Script\SignFieldDistanceShadow\SignDistanceFieldShadow.cs" />
@@ -80,8 +82,10 @@
     <Compile Include="Assets\TestAES.cs" />
     <None Include="Assets\Resources\Light4.shader" />
     <None Include="Assets\Resources\Device.compute" />
+    <None Include="Assets\Resources\SeparableBlur.shader" />
     <None Include="Assets\Resources\SignFieldDistanceShadow.shader" />
     <None Include="Assets\Resources\Radius.shader" />
+    <None Include="Assets\Resources\KLST_EF_Warp.shader" />
     <Reference Include="Unity.TextMeshPro.Editor">
       <HintPath>D:/Graphics/Project/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
     </Reference>
