@@ -73,9 +73,13 @@ Shader "Unlit/Light4"
 			#pragma shader_feature Use_WaterPlane
 			#pragma shader_feature Use_RampTex
 			#pragma shader_feature Use_CustomFog
+			#pragma multi_compile_instancing
 
             struct appdata
             {
+#ifdef INSTANCING_ON
+				UNITY_VERTEX_INPUT_INSTANCE_ID
+#endif
                 float4 vertex : POSITION;
 				float3 normal: NORMAL;
 #ifdef Use_NormalMap
@@ -165,6 +169,9 @@ Shader "Unlit/Light4"
             v2f vert (appdata v)
             {
                 v2f o;
+#ifdef INSTANCING_ON
+				UNITY_SETUP_INSTANCE_ID(v)
+#endif
                 o.pos = UnityObjectToClipPos(v.vertex);
 				float3 worldVertex;
 #ifdef Use_NormalMap
