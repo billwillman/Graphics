@@ -1,7 +1,9 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
+
 
 /*
  * 预计支持功能：
@@ -25,7 +27,63 @@ public class BakedSkinedMeshEditor : EditorWindow
 
     // 合并SkinedMesh到MESH
     void CombineSkinedMeshes() {
+#if UNITY_EDITOR
+        
+        if (m_SelGameObj == null || m_SelSkinMehes == null || m_SelSkinMehes.Length <= 0) {
+            Debug.LogError("选中合并对象为NULL");
+            return;
+        }
+        string filePath = AssetDatabase.GetAssetPath(m_SelGameObj);
+        if (string.IsNullOrEmpty(filePath)) {
+            string scenePath = AssetDatabase.GetAssetOrScenePath(m_SelGameObj);
+            if (!string.IsNullOrEmpty(scenePath)) {
+                filePath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(m_SelGameObj);
+                if (string.IsNullOrEmpty(filePath)) {
+                    Debug.LogError("选中对象文件路径为空");
+                    return;
+                }
+            }
+           
+        }
 
+        bool exportVertexs = false;
+        Vector3[] vecs = null;
+        Vector3[] normals = null;
+        Vector2[] uv1s = null;
+        List<int[]> indexList = new List<int[]>();
+        for (int i = 0; i < m_SelSkinMehes.Length; ++i) {
+            var subMesh = m_SelSkinMehes[i];
+            if (subMesh != null) {
+                if (!exportVertexs) {
+                    exportVertexs = true;
+                    var m = subMesh.sharedMesh;
+                    List<Vector3> vecList = new List<Vector3>();
+                    m.GetVertices(vecList);
+                    vecs = vecList.ToArray();
+
+                    vecList.Clear();
+                    m.GetNormals(vecList);
+                    normals = vecList.ToArray();
+
+                    List<Vector2> uvList = new List<Vector2>();
+                    m.GetUVs(0, uvList);
+                    uv1s = uvList.ToArray();
+
+                    for (int j = 0; j < m.subMeshCount; ++j) {
+                        int[] idxs = m.GetIndices(j);
+                        if (idxs != null && idxs.Length > 0) {
+                            indexList.Add(idxs);
+                        }
+                    }
+                }
+            }
+        }
+
+        filePath = Path.ChangeExtension(filePath, ".dae");
+        ExportCollada.Export(vecs, normals, uv1s, indexList, filePath);
+
+        AssetDatabase.Refresh();
+#endif
     }
 
     void OnGUI() {
