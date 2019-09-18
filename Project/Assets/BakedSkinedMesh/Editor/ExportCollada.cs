@@ -53,8 +53,10 @@ class ExportCollada {
         builder.Append('\n');
         for (int i = 0; i < idxs.Length; ++i) {
             var v = idxs[i];
-            if (i > 0) {
+            if (i%3 > 0) {
                 builder.Append(' ');
+            } else if ( (i % 3 == 0) && i > 0) {
+                builder.Append('\n');
             }
             for (int j = 0; j < idxCnt; ++j) {
                 if (j > 0)
@@ -259,7 +261,7 @@ class ExportCollada {
                         iNode.SetAttribute("semantic", "TEXCOORD");
                         iNode.SetAttribute("offset", "2");
                         iNode.SetAttribute("source", "#vertexs_uv0");
-                        iNode.SetAttribute("set", "0");
+                        //iNode.SetAttribute("set", "0");
                         trianglesNode.AppendChild(iNode);
                         ++appCnt;
                     }
