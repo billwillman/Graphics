@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading;
 using System.Collections.Generic;
 using UnityEngine;
 #if UNITY_EDITOR
@@ -9,7 +10,7 @@ using System.Xml;
 #if UNITY_EDITOR
 
 class ExportCollada {
-    private static string ConvertToContentStr(Vector3[] vertexs) {
+    private static string ConvertToContentStr(Vector3[] vertexs, float scale = 1.0f) {
         if (vertexs == null || vertexs.Length <= 0)
             return string.Empty;
         StringBuilder builder = new StringBuilder();
@@ -20,7 +21,7 @@ class ExportCollada {
             if (i > 0) {
                 builder.Append('\n');
             }
-            builder.Append(v.x.ToString()).Append(' ').Append(v.y.ToString()).Append(' ').Append(v.z.ToString());
+            builder.Append((v.x * scale).ToString()).Append(' ').Append((v.y * scale).ToString()).Append(' ').Append((v.z * scale).ToString());
         }
         if (vertexs.Length > 0)
             builder.Append('\n');
@@ -109,7 +110,7 @@ class ExportCollada {
         var possNode = doc.CreateElement("float_array");
         possNode.SetAttribute("id", "position");
         possNode.SetAttribute("count", string.Format("{0:D}", vertexs.Length * 3));
-        possNode.InnerText = ConvertToContentStr(vertexs);
+        possNode.InnerText = ConvertToContentStr(vertexs, 100.0f);
         vertexSource.AppendChild(possNode);
 
         // 增加technique_common
