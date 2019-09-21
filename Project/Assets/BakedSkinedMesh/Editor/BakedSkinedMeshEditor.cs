@@ -37,13 +37,7 @@ public class BakedSkinedMeshEditor : EditorWindow
         if (string.IsNullOrEmpty(filePath)) {
             string scenePath = AssetDatabase.GetAssetOrScenePath(m_SelGameObj);
             if (!string.IsNullOrEmpty(scenePath)) {
-		#if UNITY_5_3
-				var gameObj = PrefabUtility.FindValidUploadPrefabInstanceRoot(m_SelGameObj);
-				if (gameObj != null)
-				{
-					filePath = AssetDatabase.GetAssetPath(gameObj);
-				}
-		#else
+		#if !UNITY_5_3
                 filePath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(m_SelGameObj);
 		#endif
                 if (string.IsNullOrEmpty(filePath)) {
@@ -76,7 +70,13 @@ public class BakedSkinedMeshEditor : EditorWindow
     void OnGUI() {
         GameObject newSelect = null;
         SkinnedMeshRenderer[] sklMesh = null;
-        newSelect = EditorGUILayout.ObjectField("选择骨骼动画对象", m_SelGameObj, typeof(GameObject), true) as GameObject;
+        newSelect = EditorGUILayout.ObjectField("选择骨骼动画对象", m_SelGameObj, typeof(GameObject), 
+			#if UNITY_5_3
+			false
+			#else
+			true
+			#endif
+		) as GameObject;
         if (newSelect != m_SelGameObj) {
             if (newSelect != null) {
                 sklMesh = newSelect.GetComponentsInChildren<SkinnedMeshRenderer>();
