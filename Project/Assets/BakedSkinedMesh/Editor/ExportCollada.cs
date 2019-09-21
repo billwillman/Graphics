@@ -108,13 +108,13 @@ class ExportCollada {
 
         /*-------------------------------增加Position--------------------------------*/
         var vertexSource = doc.CreateElement("source");
-        vertexSource.SetAttribute("id", "vertexs_position");
+        vertexSource.SetAttribute("id", string.Format("{0}-vertexs_position", name));
         meshNode.AppendChild(vertexSource);
 
         var possNode = doc.CreateElement("float_array");
-        possNode.SetAttribute("id", "position");
+        possNode.SetAttribute("id", string.Format("{0}-position", name));
         possNode.SetAttribute("count", string.Format("{0:D}", vertexs.Length * 3));
-        possNode.InnerText = ConvertToContentStr(vertexs, 100.0f);
+        possNode.InnerText = ConvertToContentStr(vertexs, 1f);
         vertexSource.AppendChild(possNode);
 
         // 增加technique_common
@@ -122,7 +122,7 @@ class ExportCollada {
         vertexSource.AppendChild(tech);
         /// position
         var posAccessor = doc.CreateElement("accessor");
-        posAccessor.SetAttribute("id", "#position");
+        posAccessor.SetAttribute("id", string.Format("#{0}-position", name));
         posAccessor.SetAttribute("count", vertexs.Length.ToString());
         posAccessor.SetAttribute("stride", "3");
         tech.AppendChild(posAccessor);
@@ -150,14 +150,14 @@ class ExportCollada {
         mesh.GetNormals(vec3List);
 #endif
         Vector3[] normals = vec3List.ToArray();
-        normals = null;
+      //  normals = null;
         if (normals != null && normals.Length > 0) {
             vertexSource = doc.CreateElement("source");
-            vertexSource.SetAttribute("id", "vertexs_normal");
+            vertexSource.SetAttribute("id", string.Format("{0}-vertexs_normal", name));
             meshNode.AppendChild(vertexSource);
 
             possNode = doc.CreateElement("float_array");
-            possNode.SetAttribute("id", "normal");
+            possNode.SetAttribute("id", string.Format("{0}-normal", name));
             possNode.SetAttribute("count", string.Format("{0:D}", normals.Length * 3));
             possNode.InnerText = ConvertToContentStr(normals);
             vertexSource.AppendChild(possNode);
@@ -166,7 +166,7 @@ class ExportCollada {
             vertexSource.AppendChild(tech);
 
             posAccessor = doc.CreateElement("accessor");
-            posAccessor.SetAttribute("id", "#normal");
+            posAccessor.SetAttribute("id", string.Format("#{0}-normal", name));
             posAccessor.SetAttribute("count", normals.Length.ToString());
             posAccessor.SetAttribute("stride", "3");
             tech.AppendChild(posAccessor);
@@ -191,10 +191,10 @@ class ExportCollada {
         mesh.GetUVs(0, vec2List);
 
         Vector2[] uvs = vec2List.ToArray();
-        uvs = null;
+       // uvs = null;
         if (uvs != null && uvs.Length > 0) {
             vertexSource = doc.CreateElement("source");
-            vertexSource.SetAttribute("id", "vertexs_uv0");
+            vertexSource.SetAttribute("id", string.Format("{0}-vertexs_uv0", name));
             meshNode.AppendChild(vertexSource);
 
             possNode = doc.CreateElement("float_array");
@@ -207,7 +207,7 @@ class ExportCollada {
             vertexSource.AppendChild(tech);
 
             posAccessor = doc.CreateElement("accessor");
-            posAccessor.SetAttribute("id", "#uv0");
+            posAccessor.SetAttribute("id", string.Format("#{0}-uv0", name));
             posAccessor.SetAttribute("count", uvs.Length.ToString());
             posAccessor.SetAttribute("stride", "2");
             tech.AppendChild(posAccessor);
@@ -224,12 +224,12 @@ class ExportCollada {
         }
 
         var vertexsNode = doc.CreateElement("vertices");
-        vertexsNode.SetAttribute("id", "vertex");
+        vertexsNode.SetAttribute("id", string.Format("{0}-vertex", name));
         meshNode.AppendChild(vertexsNode);
 
         var inputNode = doc.CreateElement("input");
         inputNode.SetAttribute("semantic", "POSITION");
-        inputNode.SetAttribute("source", "#vertexs_position");
+        inputNode.SetAttribute("source", string.Format("#{0}-vertexs_position", name));
         vertexsNode.AppendChild(inputNode);
 
         List<int[]> indexList = new List<int[]>();
@@ -253,14 +253,14 @@ class ExportCollada {
                     var iNode = doc.CreateElement("input");
                     iNode.SetAttribute("semantic", "VERTEX");
                     iNode.SetAttribute("offset", "0");
-                    iNode.SetAttribute("source", "#vertexs_position");
+					iNode.SetAttribute("source", string.Format("#{0}-vertex", name));
                     trianglesNode.AppendChild(iNode);
 
                     if (normals != null && normals.Length > 0) {
                         iNode = doc.CreateElement("input");
                         iNode.SetAttribute("semantic", "NORMAL");
                         iNode.SetAttribute("offset", "1");
-                        iNode.SetAttribute("source", "#vertexs_normal");
+                        iNode.SetAttribute("source", string.Format("#{0}-vertexs_normal", name));
                         trianglesNode.AppendChild(iNode);
                         ++appCnt;
                     }
@@ -269,7 +269,7 @@ class ExportCollada {
                         iNode = doc.CreateElement("input");
                         iNode.SetAttribute("semantic", "TEXCOORD");
                         iNode.SetAttribute("offset", "2");
-                        iNode.SetAttribute("source", "#vertexs_uv0");
+                        iNode.SetAttribute("source", string.Format("#{0}-vertexs_uv0", name));
                         //iNode.SetAttribute("set", "0");
                         trianglesNode.AppendChild(iNode);
                         ++appCnt;
@@ -308,6 +308,17 @@ class ExportCollada {
         var instanceNode = doc.CreateElement("instance_geometry");
         instanceNode.SetAttribute("url", url);
         node.AppendChild(instanceNode);
+
+		var extraNode = doc.CreateElement("extra");
+		node.AppendChild(extraNode);
+
+		var tNode = doc.CreateElement("technique");
+		tNode.SetAttribute("profile", "FCOLLADA");
+		extraNode.AppendChild(tNode);
+
+		var visNode = doc.CreateElement("visibility");
+		visNode.InnerText = "1.000000";
+		tNode.AppendChild(visNode);
     }
 
     private static void EpxortVisualSceneNodes(List<Mesh> meshes, SkinnedMeshRenderer[] skls, XmlDocument doc, XmlElement root, string name) {
