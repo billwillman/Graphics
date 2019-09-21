@@ -37,7 +37,15 @@ public class BakedSkinedMeshEditor : EditorWindow
         if (string.IsNullOrEmpty(filePath)) {
             string scenePath = AssetDatabase.GetAssetOrScenePath(m_SelGameObj);
             if (!string.IsNullOrEmpty(scenePath)) {
+		#if UNITY_5_3
+				var gameObj = PrefabUtility.FindValidUploadPrefabInstanceRoot(m_SelGameObj);
+				if (gameObj != null)
+				{
+					filePath = AssetDatabase.GetAssetPath(gameObj);
+				}
+		#else
                 filePath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(m_SelGameObj);
+		#endif
                 if (string.IsNullOrEmpty(filePath)) {
                     Debug.LogError("选中对象文件路径为空");
                     return;

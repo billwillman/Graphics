@@ -88,7 +88,11 @@ class ExportCollada {
         if (mesh == null || root == null || doc == null)
             return;
         List<Vector3> vec3List = new List<Vector3>();
+#if UNITY_5_3
+		vec3List.AddRange(mesh.vertices);
+#else
         mesh.GetVertices(vec3List);
+#endif
         if (vec3List.Count <= 0)
             return;
 
@@ -140,7 +144,11 @@ class ExportCollada {
 
         /*---------------------------增加Normal---------------------------------*/
         vec3List.Clear();
+#if UNITY_5_3
+		vec3List.AddRange(mesh.normals);
+#else
         mesh.GetNormals(vec3List);
+#endif
         Vector3[] normals = vec3List.ToArray();
         normals = null;
         if (normals != null && normals.Length > 0) {
