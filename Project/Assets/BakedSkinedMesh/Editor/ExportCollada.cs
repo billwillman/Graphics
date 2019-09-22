@@ -286,7 +286,7 @@ class ExportCollada {
 
     }
 
-    private static void EpxortVisualSceneNode(Mesh mesh, SkinnedMeshRenderer skl, XmlDocument doc, XmlElement root, string name, string url) {
+    private static void EpxortVisualSceneNode(Mesh mesh, Renderer skl, XmlDocument doc, XmlElement root, string name, string url) {
         var node = doc.CreateElement("node");
         node.SetAttribute("name", name);
         node.SetAttribute("id", name);
@@ -321,7 +321,7 @@ class ExportCollada {
 		tNode.AppendChild(visNode);
     }
 
-    private static void EpxortVisualSceneNodes(List<Mesh> meshes, SkinnedMeshRenderer[] skls, XmlDocument doc, XmlElement root, string name) {
+    private static void EpxortVisualSceneNodes(List<Mesh> meshes, Renderer[] skls, XmlDocument doc, XmlElement root, string name) {
         for (int i = 0; i < meshes.Count; ++i) {
             var mesh = meshes[i];
             string n = string.Format("node-{0}-{1:D}", name, i);
@@ -344,8 +344,8 @@ class ExportCollada {
         }
     }
 
-    public static void Export(List<Mesh> meshes, SkinnedMeshRenderer[] skls, string fileName, string name = "Noname") {
-        if (meshes == null || meshes.Count <= 0)
+    public static void Export(List<Mesh> meshes, Renderer[] skls, string fileName, string name = "Noname") {
+        if (meshes == null || meshes.Count <= 0 || skls == null || meshes.Count != skls.Length)
             return;
 
         // ----增加COLLADA説明

@@ -14,7 +14,7 @@ using UnityEngine;
 public class BakedSkinedMeshEditor : EditorWindow
 {
     private GameObject m_SelGameObj = null;
-    private SkinnedMeshRenderer[] m_SelSkinMehes = null;
+    private Renderer[] m_SelSkinMehes = null;
 
     public BakedSkinedMeshEditor() {
         this.titleContent = new GUIContent("蒙皮骨骼动画工具");
@@ -51,8 +51,23 @@ public class BakedSkinedMeshEditor : EditorWindow
         List<Mesh> meshList = new List<Mesh>();
         for (int i = 0; i < m_SelSkinMehes.Length; ++i) {
             var sklMesh = m_SelSkinMehes[i];
-            if (sklMesh != null && sklMesh.sharedMesh != null) {
-                meshList.Add(sklMesh.sharedMesh);
+            if (sklMesh != null) {
+                Mesh mesh = null;
+                MeshRenderer mR = sklMesh as MeshRenderer;
+                if (mR != null)
+                {
+                    MeshFilter mF = mR.GetComponent<MeshFilter>();
+                    if (mF != null)
+                        mesh = mF.sharedMesh;
+                }
+                else
+                {
+                    SkinnedMeshRenderer smR = sklMesh as SkinnedMeshRenderer;
+                    if (smR != null)
+                        mesh = smR.sharedMesh;
+                }
+                if (mesh != null)
+                    meshList.Add(mesh);
                 //var mesh = new Mesh();
                 //sklMesh.BakeMesh(mesh);
                 //meshList.Add(mesh);
@@ -69,7 +84,7 @@ public class BakedSkinedMeshEditor : EditorWindow
 
     void OnGUI() {
         GameObject newSelect = null;
-        SkinnedMeshRenderer[] sklMesh = null;
+        Renderer[] sklMesh = null;
         newSelect = EditorGUILayout.ObjectField("选择骨骼动画对象", m_SelGameObj, typeof(GameObject), 
 			#if UNITY_5_3
 			false
@@ -79,14 +94,38 @@ public class BakedSkinedMeshEditor : EditorWindow
 		) as GameObject;
         if (newSelect != m_SelGameObj) {
             if (newSelect != null) {
-                sklMesh = newSelect.GetComponentsInChildren<SkinnedMeshRenderer>();
+                sklMesh = newSelect.GetComponentsInChildren<Renderer>();
                 if (sklMesh == null || sklMesh.Length <= 0) {
                     newSelect = null;
                     sklMesh = null;
+                    Debug.LogError("not found: Renderer Componet");
                 }
             }
             m_SelGameObj = newSelect;
             m_SelSkinMehes = sklMesh;
+            // 处理空MESH的情况
+            if (m_SelSkinMehes != null)
+            {
+                List<Renderer> rList = new List<Renderer>();
+                for (int i = 0; i < m_SelSkinMehes.Length; ++i)
+                {
+                    var mR = m_SelSkinMehes[i] as MeshRenderer;
+                    if (mR != null)
+                    {
+                        var mF = mR.GetComponent<MeshFilter>();
+                        if (mF != null && mF.sharedMesh != null)
+                            rList.Add(mR);
+                    } else
+                    {
+                        var sR = m_SelSkinMehes[i] as SkinnedMeshRenderer;
+                        if (sR != null && sR.sharedMesh != null)
+                        {
+                            rList.Add(sR);
+                        }
+                    }
+                }
+                m_SelSkinMehes = rList.ToArray();
+            }
         }
 
         if (m_SelGameObj != null) {
@@ -95,7 +134,7 @@ public class BakedSkinedMeshEditor : EditorWindow
                 for (int i = 0; i < m_SelSkinMehes.Length; ++i) {
                     var sub = m_SelSkinMehes[i];
                     if (sub != null) {
-                        EditorGUILayout.ObjectField(sub, typeof(SkinnedMeshRenderer), true);
+                        EditorGUILayout.ObjectField(sub, typeof(Renderer), true);
                     }
                 }
                 if (GUILayout.Button("合并所有到普通MESH")) {
