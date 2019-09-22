@@ -191,7 +191,16 @@ public class BakedSkinedMeshEditor : EditorWindow
 
     private void DrawMeshBrush()
     {
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.RepeatButton("圆"))
+        {
 
+        }
+        if (GUILayout.RepeatButton("五角星"))
+        {
+
+        }
+        EditorGUILayout.EndHorizontal();
     }
 
     void OnGUI() {

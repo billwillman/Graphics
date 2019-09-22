@@ -23,6 +23,7 @@ void CSClear (uint3 id : SV_DispatchThreadID)
 	zBufferSurface[id.xy] = -1000;
 }
 
+// ByteAddressBuffer里面的数据记得4字节对齐
 StructuredBuffer<float3> iVertexBuffer;
 StructuredBuffer<float2> iUVBuffer;
 StructuredBuffer<float4> iColorBuffer;
