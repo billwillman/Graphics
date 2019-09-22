@@ -5,6 +5,13 @@ using UnityEditor;
 using UnityEngine;
 
 
+enum ToolItems
+{ 
+    Tool_None = 0,
+    Tool_CombineMesh = 1,
+    Tool_MeshBrush = 2
+};
+
 /*
  * 预计支持功能：
  * 1.将多个SKINEDMESH合并到一个普通MESH，也可以直接转单独MESH
@@ -15,6 +22,32 @@ public class BakedSkinedMeshEditor : EditorWindow
 {
     private GameObject m_SelGameObj = null;
     private Renderer[] m_SelSkinMehes = null;
+    private Vector2 m_Scroll = Vector2.zero;
+    private ToolItems m_Tool = ToolItems.Tool_CombineMesh;
+
+    private bool DrawExpandButton(string title, ToolItems itemType)
+    {
+        string preText = string.Empty;
+        bool isExpand = m_Tool == itemType;
+        if (isExpand)
+            preText = "(缩进)";
+        else
+            preText = "(展开)";
+        if (GUILayout.Button(string.Format("{0}{1}", preText, title)))
+        {
+            if (isExpand)
+            {
+                m_Tool = ToolItems.Tool_None;
+                isExpand = false;
+            }
+            else
+            {
+                m_Tool = itemType;
+                isExpand = true;
+            }
+        }
+        return isExpand;
+    }
 
     public BakedSkinedMeshEditor() {
         this.titleContent = new GUIContent("蒙皮骨骼动画工具");
@@ -82,20 +115,24 @@ public class BakedSkinedMeshEditor : EditorWindow
 #endif
     }
 
-    void OnGUI() {
+    private void DrawCombineMesh()
+    {
         GameObject newSelect = null;
         Renderer[] sklMesh = null;
-        newSelect = EditorGUILayout.ObjectField("选择骨骼动画对象", m_SelGameObj, typeof(GameObject), 
-			#if UNITY_5_3
+        newSelect = EditorGUILayout.ObjectField("选择骨骼动画对象", m_SelGameObj, typeof(GameObject),
+#if UNITY_5_3
 			false
-			#else
-			true
-			#endif
-		) as GameObject;
-        if (newSelect != m_SelGameObj) {
-            if (newSelect != null) {
+#else
+ true
+#endif
+) as GameObject;
+        if (newSelect != m_SelGameObj)
+        {
+            if (newSelect != null)
+            {
                 sklMesh = newSelect.GetComponentsInChildren<Renderer>();
-                if (sklMesh == null || sklMesh.Length <= 0) {
+                if (sklMesh == null || sklMesh.Length <= 0)
+                {
                     newSelect = null;
                     sklMesh = null;
                     Debug.LogError("not found: Renderer Componet");
@@ -115,7 +152,8 @@ public class BakedSkinedMeshEditor : EditorWindow
                         var mF = mR.GetComponent<MeshFilter>();
                         if (mF != null && mF.sharedMesh != null)
                             rList.Add(mR);
-                    } else
+                    }
+                    else
                     {
                         var sR = m_SelSkinMehes[i] as SkinnedMeshRenderer;
                         if (sR != null && sR.sharedMesh != null)
@@ -128,19 +166,38 @@ public class BakedSkinedMeshEditor : EditorWindow
             }
         }
 
-        if (m_SelGameObj != null) {
-           // EditorGUILayout.Label
-           if (m_SelSkinMehes != null && m_SelSkinMehes.Length > 0) {
-                for (int i = 0; i < m_SelSkinMehes.Length; ++i) {
+        if (m_SelGameObj != null)
+        {
+            // EditorGUILayout.Label
+            if (m_SelSkinMehes != null && m_SelSkinMehes.Length > 0)
+            {
+                m_Scroll = EditorGUILayout.BeginScrollView(m_Scroll, true, false);
+                for (int i = 0; i < m_SelSkinMehes.Length; ++i)
+                {
                     var sub = m_SelSkinMehes[i];
-                    if (sub != null) {
+                    if (sub != null)
+                    {
                         EditorGUILayout.ObjectField(sub, typeof(Renderer), true);
                     }
                 }
-                if (GUILayout.Button("合并所有到普通MESH")) {
+                EditorGUILayout.EndScrollView();
+                if (GUILayout.Button("合并所有到普通MESH"))
+                {
                     CombineSkinedMeshes();
                 }
             }
         }
+    }
+
+    private void DrawMeshBrush()
+    {
+
+    }
+
+    void OnGUI() {
+        if (DrawExpandButton("合并MESH", ToolItems.Tool_CombineMesh))
+          DrawCombineMesh();
+        if (DrawExpandButton("MESH Brush", ToolItems.Tool_MeshBrush))
+            DrawMeshBrush();
     }
 }
