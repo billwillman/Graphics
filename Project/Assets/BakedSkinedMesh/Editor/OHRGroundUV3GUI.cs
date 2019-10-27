@@ -3,7 +3,8 @@ using UnityEditor;
 
 public class OHRGroundUV3GUI : ShaderGUI
 {
-
+	#if UNITY_5_3
+	#else
     Material target;
     MaterialEditor editor;
     MaterialProperty[] properties;
@@ -397,4 +398,5 @@ public class OHRGroundUV3GUI : ShaderGUI
     {
         return FindProperty(name, properties);
     }
+	#endif
 }
