@@ -341,14 +341,18 @@ public class DynamicBone : MonoBehaviour
         }
         else 	// end bone
         {
+            // m_EndLength和m_EndOffset只会其中一个起效，m_EndLength优先
+
             // 传入TRANS为NULL的粒子目的是？？特殊的末尾节点？？？
             Transform pb = m_Particles[parentIndex].m_Transform;
             if (m_EndLength > 0)
             {
                 Transform ppb = pb.parent;
-                if (ppb != null)
+                if (ppb != null) {
                     p.m_EndOffset = pb.InverseTransformPoint((pb.position * 2 - ppb.position)) * m_EndLength;
-                else
+                    // 为什么不是下面的写法，感觉效果一致啊
+                    //p.m_EndOffset = pb.InverseTransformDirection((pb.position - ppb.position).normalized) * m_EndLength;
+                } else
                     p.m_EndOffset = new Vector3(m_EndLength, 0, 0);
             }
             else
@@ -364,8 +368,11 @@ public class DynamicBone : MonoBehaviour
 
                 var worldOffset = transform.TransformDirection(m_EndOffset);
 
+                // 此处m_EndOffset保存的是粒子节点相对于父节点的位置
                 p.m_EndOffset = pb.InverseTransformPoint(worldOffset + pb.position);
             }
+
+            // 将相对于父节点的位置转成世界坐标传入m_Position
             p.m_Position = p.m_PrevPosition = pb.TransformPoint(p.m_EndOffset);
         }
 
@@ -398,6 +405,7 @@ public class DynamicBone : MonoBehaviour
                         Transform e = m_Exclusions[j];
                         if (e == b.GetChild(i))
                         {
+                            // 说明真实骨骼被排除了
                             exclude = true;
                             break;
                         }
