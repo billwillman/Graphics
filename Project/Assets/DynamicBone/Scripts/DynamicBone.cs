@@ -96,10 +96,11 @@ public class DynamicBone : MonoBehaviour
 	[Tooltip("Constrain bones to move on specified plane.")]
 #endif	
     public FreezeAxis m_FreezeAxis = FreezeAxis.None;
-	
+
 #if UNITY_5
 	[Tooltip("Disable physics simulation automatically if character is far from camera or player.")]
-#endif		
+#endif
+    // 是否开启距离检测，超过参照物m_ReferenceObject距离时（如果为NULL，则去当前主相机作为参考系），则不使用动态骨骼功能
     public bool m_DistantDisable = false;
     public Transform m_ReferenceObject = null;
     public float m_DistanceToObject = 20;
@@ -168,6 +169,8 @@ public class DynamicBone : MonoBehaviour
 
     void PreUpdate()
     {
+        // m_DistantDisable是否开启距离检测，如果开启距离检测，超过RefernceObject的距离就不再使用虚拟更新
+        // 每次在更新前都需要恢复到初始位置，保证后面计算正确
         if (m_Weight > 0 && !(m_DistantDisable && m_DistantDisabled))
             InitTransforms();
     }
