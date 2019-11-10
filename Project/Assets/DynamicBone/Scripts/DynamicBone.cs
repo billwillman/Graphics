@@ -353,7 +353,18 @@ public class DynamicBone : MonoBehaviour
             }
             else
             {
-                p.m_EndOffset = pb.InverseTransformPoint(transform.TransformDirection(m_EndOffset) + pb.position);
+                // InverseTransformPoint将点从世界坐标系到局部坐标系
+                // TransformDirection 将向量从局部坐标系变成世界坐标系，然后加上父节点的的世界坐标位置，然后再反转到父节点的局部坐标系上
+                // 所以m_EndOffset其实是相对于父节点坐标系的
+                // m_EndOffset是相对于脚本的GAMEOBJECT的位置
+
+                // TransformDirection 将方向从本地坐标转换为世界坐标，这个操作不会受到变换的缩放和位置的影响。返回的向量与direction有同样的长度
+                // TransformPoint 将位置从本地坐标转换为世界坐标，受缩放影响。
+                // TransformVector：将坐标点从本地坐标转换为世界坐标，不受位置影响但受缩放影响。 
+
+                var worldOffset = transform.TransformDirection(m_EndOffset);
+
+                p.m_EndOffset = pb.InverseTransformPoint(worldOffset + pb.position);
             }
             p.m_Position = p.m_PrevPosition = pb.TransformPoint(p.m_EndOffset);
         }
