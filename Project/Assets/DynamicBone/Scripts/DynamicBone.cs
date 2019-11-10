@@ -84,6 +84,7 @@ public class DynamicBone : MonoBehaviour
 #if UNITY_5
 	[Tooltip("Bones exclude from physics simulation.")]
 #endif
+    // 真实骨骼排除列表
     public List<Transform> m_Exclusions = null;
 	
 	
@@ -318,17 +319,29 @@ public class DynamicBone : MonoBehaviour
 
     void AppendParticles(Transform b, int parentIndex, float boneLength)
     {
+        // 只有树状结果的叶子粒子才有可能b = null表示结束节点
+       // if (b == null)
+        //    return;
+
         Particle p = new Particle();
         p.m_Transform = b;
+        // 骨骼父类节点索引
         p.m_ParentIndex = parentIndex;
         if (b != null)
         {
+            /*-------------------------- 初始化粒子数据 ---------------------------------*/
+
+            // 世界坐标系位置
             p.m_Position = p.m_PrevPosition = b.position;
+            // 局部坐标系位置
             p.m_InitLocalPosition = b.localPosition;
+            // 局部坐标系旋转(四元数)
             p.m_InitLocalRotation = b.localRotation;
+            /*---------------------------------------------------------------------------*/
         }
         else 	// end bone
         {
+            // 传入TRANS为NULL的粒子目的是？？特殊的末尾节点？？？
             Transform pb = m_Particles[parentIndex].m_Transform;
             if (m_EndLength > 0)
             {
@@ -347,14 +360,20 @@ public class DynamicBone : MonoBehaviour
 
         if (parentIndex >= 0)
         {
+            // 因为P的参数m_Transform是有可能为NULL，所以要用m_Position，但有parentIndex的肯定不会是NULL粒子
             boneLength += (m_Particles[parentIndex].m_Transform.position - p.m_Position).magnitude;
+            // 当前粒子距离根节点的骨骼路径长度
             p.m_BoneLength = boneLength;
+            // 整个虚拟骨骼的最大长度（因为骨骼树有个能有多个分支，长度不一样的）
             m_BoneTotalLength = Mathf.Max(m_BoneTotalLength, boneLength);
         }
 
+        // 新增粒子在列表中的索引
         int index = m_Particles.Count;
+        // 添加新粒子到列表
         m_Particles.Add(p);
 
+        // 添加这个节点下的其他子类骨骼节点
         if (b != null)
         {
             for (int i = 0; i < b.childCount; ++i)
@@ -362,6 +381,7 @@ public class DynamicBone : MonoBehaviour
                 bool exclude = false;
                 if (m_Exclusions != null)
                 {
+                    // 检查真实骨骼是否在排除列表中，如果在，则不添加
                     for (int j = 0; j < m_Exclusions.Count; ++j)
                     {
                         Transform e = m_Exclusions[j];
@@ -373,11 +393,15 @@ public class DynamicBone : MonoBehaviour
                     }
                 }
                 if (!exclude)
+                    // 如果此真实骨骼没有被排除则添加到粒子列表里
                     AppendParticles(b.GetChild(i), index, boneLength);
-                else if (m_EndLength > 0 || m_EndOffset != Vector3.zero)
+                else if (m_EndLength > 0 || m_EndOffset != Vector3.zero) {
+                    // 如果真实骨骼被排除，则添加一个粒子（没有真实骨骼对应的）到列表里
                     AppendParticles(null, index, boneLength);
+                }
             }
 
+            // 看是否需要添加一个结束节点粒子
             if (b.childCount == 0 && (m_EndLength > 0 || m_EndOffset != Vector3.zero))
                 AppendParticles(null, index, boneLength);
         }
