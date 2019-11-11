@@ -501,11 +501,16 @@ public class DynamicBone : MonoBehaviour
 
     void UpdateParticles1()
     {
+        // 世界坐标系重力
         Vector3 force = m_Gravity;
+        // 世界坐标系重力的单位向量
         Vector3 fdir = m_Gravity.normalized;
+        // 将当前位置的初始化重力方向（在m_Root坐标系，在初始化的时候会将当时的世界坐标系重力转换到m_Root局部坐标系中，保存在m_LocalGravity）转到世界坐标系
         Vector3 rf = m_Root.TransformDirection(m_LocalGravity);
+        // 求出局部重力转到世界坐标系后在世界坐标系重力下的投影
         Vector3 pf = fdir * Mathf.Max(Vector3.Dot(rf, fdir), 0);	// project current gravity to rest gravity
         force -= pf;	// remove projected gravity
+        // 外部自定义力m_Force和计算后的重力相加 * 一个系数m_ObjectScale
         force = (force + m_Force) * m_ObjectScale;
 
         for (int i = 0; i < m_Particles.Count; ++i)
