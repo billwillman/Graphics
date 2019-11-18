@@ -522,6 +522,7 @@ public class DynamicBone : MonoBehaviour
                 Vector3 v = p.m_Position - p.m_PrevPosition;
                 Vector3 rmove = m_ObjectMove * p.m_Inert;
                 p.m_PrevPosition = p.m_Position + rmove;
+                // v * (1 - p.m_Damping)为阻尼力，阻尼力和速度有关
                 p.m_Position += v * (1 - p.m_Damping) + force + rmove;
             }
             else
