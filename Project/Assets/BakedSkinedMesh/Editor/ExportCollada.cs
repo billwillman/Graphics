@@ -84,7 +84,7 @@ class ExportCollada {
         return ret;
     }
 
-    private static void AppendToRootNode(Mesh mesh, XmlDocument doc, XmlElement root, string name) {
+    private static void AppendToRootNode(Mesh mesh, SkinnedMeshRenderer skl, XmlDocument doc, XmlElement root, string name) {
         if (mesh == null || root == null || doc == null)
             return;
         List<Vector3> vec3List = new List<Vector3>();
@@ -187,40 +187,48 @@ class ExportCollada {
             posAccessor.AppendChild(paramNode);
         }
 
+        List<Vector2[]> uvsList = new List<Vector2[]>();
         List<Vector2> vec2List = new List<Vector2>();
-        mesh.GetUVs(0, vec2List);
 
-        Vector2[] uvs = vec2List.ToArray();
-       // uvs = null;
-        if (uvs != null && uvs.Length > 0) {
-            vertexSource = doc.CreateElement("source");
-            vertexSource.SetAttribute("id", string.Format("{0}-vertexs_uv0", name));
-            meshNode.AppendChild(vertexSource);
+        for (int i = 0; i < 8; ++i) {
+            vec2List.Clear();
+            mesh.GetUVs(i, vec2List);
+            if (vec2List.Count <= 0)
+                continue;
 
-            possNode = doc.CreateElement("float_array");
-            possNode.SetAttribute("id", "uv0");
-            possNode.SetAttribute("count", string.Format("{0:D}", uvs.Length * 2));
-            possNode.InnerText = ConvertToContentStr(uvs);
-            vertexSource.AppendChild(possNode);
+            Vector2[] uvs = vec2List.ToArray();
+            // uvs = null;
+            if (uvs != null && uvs.Length > 0) {
+                uvsList.Add(uvs);
+                vertexSource = doc.CreateElement("source");
+                vertexSource.SetAttribute("id", string.Format("{0}-vertexs_uv{1}", name, i));
+                meshNode.AppendChild(vertexSource);
 
-            tech = doc.CreateElement("technique_common");
-            vertexSource.AppendChild(tech);
+                possNode = doc.CreateElement("float_array");
+                possNode.SetAttribute("id", string.Format("uv{0}", i));
+                possNode.SetAttribute("count", string.Format("{0:D}", uvs.Length * 2));
+                possNode.InnerText = ConvertToContentStr(uvs);
+                vertexSource.AppendChild(possNode);
 
-            posAccessor = doc.CreateElement("accessor");
-            posAccessor.SetAttribute("id", string.Format("#{0}-uv0", name));
-            posAccessor.SetAttribute("count", uvs.Length.ToString());
-            posAccessor.SetAttribute("stride", "2");
-            tech.AppendChild(posAccessor);
+                tech = doc.CreateElement("technique_common");
+                vertexSource.AppendChild(tech);
 
-            paramNode = doc.CreateElement("param");
-            paramNode.SetAttribute("name", "S");
-            paramNode.SetAttribute("type", "float");
-            posAccessor.AppendChild(paramNode);
+                posAccessor = doc.CreateElement("accessor");
+                posAccessor.SetAttribute("id", string.Format("#{0}-uv{1}", name, i));
+                posAccessor.SetAttribute("count", uvs.Length.ToString());
+                posAccessor.SetAttribute("stride", "2");
+                tech.AppendChild(posAccessor);
 
-            paramNode = doc.CreateElement("param");
-            paramNode.SetAttribute("name", "T");
-            paramNode.SetAttribute("type", "float");
-            posAccessor.AppendChild(paramNode);
+                paramNode = doc.CreateElement("param");
+                paramNode.SetAttribute("name", "S");
+                paramNode.SetAttribute("type", "float");
+                posAccessor.AppendChild(paramNode);
+
+                paramNode = doc.CreateElement("param");
+                paramNode.SetAttribute("name", "T");
+                paramNode.SetAttribute("type", "float");
+                posAccessor.AppendChild(paramNode);
+            }
         }
 
         var vertexsNode = doc.CreateElement("vertices");
@@ -265,14 +273,17 @@ class ExportCollada {
                         ++appCnt;
                     }
 
-                    if (uvs != null && uvs.Length > 0) {
-                        iNode = doc.CreateElement("input");
-                        iNode.SetAttribute("semantic", "TEXCOORD");
-                        iNode.SetAttribute("offset", "2");
-                        iNode.SetAttribute("source", string.Format("#{0}-vertexs_uv0", name));
-                        //iNode.SetAttribute("set", "0");
-                        trianglesNode.AppendChild(iNode);
-                        ++appCnt;
+                    for (int j = 0; j < uvsList.Count; ++j) {
+                        var uvs = uvsList[j];
+                        if (uvs != null && uvs.Length > 0) {
+                            iNode = doc.CreateElement("input");
+                            iNode.SetAttribute("semantic", "TEXCOORD");
+                            iNode.SetAttribute("offset", (2 + j).ToString());
+                            iNode.SetAttribute("source", string.Format("#{0}-vertexs_uv{1}", name, j));
+                            //iNode.SetAttribute("set", "0");
+                            trianglesNode.AppendChild(iNode);
+                            ++appCnt;
+                        }
                     }
 
                     var pNode = doc.CreateElement("p");
@@ -365,7 +376,7 @@ class ExportCollada {
         for (int i = 0; i < meshes.Count; ++i) {
             var mesh = meshes[i];
             string n = string.Format("{0}-{1:D}", name, i);
-            AppendToRootNode(mesh, doc, geo, n);
+            AppendToRootNode(mesh, skls[i] as SkinnedMeshRenderer, doc, geo, n);
         }
 
         var libraryScene = doc.CreateElement("library_visual_scenes");
