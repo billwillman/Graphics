@@ -43,7 +43,14 @@ public class NsSkeletonRender : MonoBehaviour
         }
     }
 
+    // 蒙皮
+    private void DoSkinMesh() {
+
+    }
+
     void OnDrawGizmos() {
+        UpdateAnim();
         DrawBones();
+        DoSkinMesh();
     }
 }
