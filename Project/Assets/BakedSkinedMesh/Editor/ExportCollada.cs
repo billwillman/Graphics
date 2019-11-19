@@ -512,10 +512,12 @@ class ExportCollada {
                 boneData.initRot = bone.localRotation;
                 if (bone.parent == null) {
                     boneData.parentBone = -1;
+                    sklData.m_RootBoneIndex = i;
                 } else {
                     int parentBoneIdx;
                     if (!boneInstanceIDToIndexMap.TryGetValue(bone.parent.GetInstanceID(), out parentBoneIdx)) {
                         parentBoneIdx = -2;
+                        sklData.m_RootBoneIndex = i;
                         Debug.LogErrorFormat("bone: {0} parent: {1} not found", bone.name, bone.parent.name);
                     }
                     boneData.parentBone = parentBoneIdx;
