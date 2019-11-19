@@ -260,7 +260,11 @@ class ExportCollada {
         }
 
         List<BoneWeight> meshBoneWeightList = new List<BoneWeight>();
+#if UNITY_5_3
+		meshBoneWeightList.AddRange(mesh.boneWeights);
+#else
         mesh.GetBoneWeights(meshBoneWeightList);
+#endif
         if (meshBoneWeightList.Count > 0) {
             if (isBoneWeightToUVs && (usedTexcordId + 2 < 8)) {
                 // 将骨骼索引信息接入UV
