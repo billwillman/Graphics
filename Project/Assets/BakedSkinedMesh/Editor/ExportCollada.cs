@@ -2,10 +2,11 @@
 using System.Text;
 using System.Threading;
 using System.Collections.Generic;
-using UnityEngine;
 #if UNITY_EDITOR
 using System.Xml;
+using UnityEditor;
 #endif
+using UnityEngine;
 
 #if UNITY_EDITOR
 
@@ -487,6 +488,46 @@ class ExportCollada {
         }
     }
 
+    // 自定義Asset
+    private static void ExportSklAsset(SkinnedMeshRenderer skl, string fileName) {
+        if (skl == null)
+            return;
+        var bones = skl.bones;
+        if (bones != null && bones.Length > 0) {
+#if UNITY_EDITOR
+            // 先遍历InstanceID对应INDEX
+            Dictionary<int, int> boneInstanceIDToIndexMap = new Dictionary<int, int>();
+            for (int i = 0; i < bones.Length; ++i) {
+                var bone = bones[i];
+                boneInstanceIDToIndexMap[bone.GetInstanceID()] = i;
+            }
+            
+            _SkeletonData sklData = ScriptableObject.CreateInstance<_SkeletonData>();
+            sklData.m_BoneDatas = new _BoneData[bones.Length];
+            for (int i = 0; i < bones.Length; ++i) {
+                var bone = bones[i];
+                _BoneData boneData = new _BoneData();
+                boneData.initOffset = bone.localPosition;
+                boneData.initScale = bone.localScale;
+                boneData.initRot = bone.localRotation;
+                if (bone.parent == null) {
+                    boneData.parentBone = -1;
+                } else {
+                    int parentBoneIdx;
+                    if (!boneInstanceIDToIndexMap.TryGetValue(bone.parent.GetInstanceID(), out parentBoneIdx)) {
+                        parentBoneIdx = -2;
+                        Debug.LogErrorFormat("bone: {0} parent: {1} not found", bone.name, bone.parent.name);
+                    }
+                    boneData.parentBone = parentBoneIdx;
+                }
+                sklData.m_BoneDatas[i] = boneData;
+            }
+
+            AssetDatabase.CreateAsset(sklData, fileName);
+#endif
+        }
+    }
+
     public static void Export(List<Mesh> meshes, Renderer[] skls, string fileName, string name = "Noname") {
         if (meshes == null || meshes.Count <= 0 || skls == null || meshes.Count != skls.Length)
             return;
@@ -531,6 +572,27 @@ class ExportCollada {
 
         // 保存到文件
         doc.Save(fileName);
+
+        // 到處骨骼Skinned信息
+        string noExtFileName = System.IO.Path.GetFileNameWithoutExtension(fileName);
+        string filePathName = System.IO.Path.GetDirectoryName(fileName);
+        noExtFileName = string.Format("{0}/{1}", filePathName, noExtFileName);
+        noExtFileName = noExtFileName.Replace('\\', '/');
+        int startPos = noExtFileName.IndexOf("Assets/", StringComparison.CurrentCultureIgnoreCase);
+        if (startPos >= 0) {
+            if (startPos > 0)
+                noExtFileName = noExtFileName.Substring(startPos);
+            if (skls != null && (skls.Length > 0)) {
+                for (int i = 0; i < skls.Length; ++i) {
+                    string sklFileName = string.Format("{0}_{1:D}.asset", noExtFileName, i);
+                    ExportSklAsset(skls[i] as SkinnedMeshRenderer, sklFileName);
+                }
+
+                AssetDatabase.Refresh();
+            }
+        } else {
+            Debug.LogError("Skleton only Save Assets/ Path");
+        }
     }
 
 }
