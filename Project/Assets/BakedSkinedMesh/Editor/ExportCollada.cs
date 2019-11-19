@@ -193,8 +193,9 @@ class ExportCollada {
         for (int i = 0; i < 8; ++i) {
             vec2List.Clear();
             mesh.GetUVs(i, vec2List);
+            // 发现为空则退出
             if (vec2List.Count <= 0)
-                continue;
+                break;
 
             Vector2[] uvs = vec2List.ToArray();
             // uvs = null;
