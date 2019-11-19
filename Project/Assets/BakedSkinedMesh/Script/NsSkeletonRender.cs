@@ -45,7 +45,9 @@ public class NsSkeletonRender : MonoBehaviour
 
     // 蒙皮
     private void DoSkinMesh() {
+        if (m_SkeletonMesh != null) {
 
+        }
     }
 
     void OnDrawGizmos() {
