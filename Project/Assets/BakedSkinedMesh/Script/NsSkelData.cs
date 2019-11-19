@@ -48,7 +48,7 @@ public struct _BoneData {
         return initWorldMatrix;
     }
 
-    public Vector3 GetBoneCenter(_SkeletonData skl, Matrix4x4 root) {
+    public Vector3 GetInitBoneCenter(_SkeletonData skl, Matrix4x4 root) {
         Matrix4x4 mat = root * GetInitGlobalTransMatrix(skl);
         Vector3 ret = mat.GetColumn(3);
         return ret;

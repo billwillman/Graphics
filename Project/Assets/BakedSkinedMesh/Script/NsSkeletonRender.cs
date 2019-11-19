@@ -23,14 +23,14 @@ public class NsSkeletonRender : MonoBehaviour
         for (int i = 0; i < m_SkeletonData.m_BoneDatas.Length; ++i) {
             Gizmos.color = Color.red;
             var bone = m_SkeletonData.m_BoneDatas[i];
-            Vector3 center = bone.GetBoneCenter(m_SkeletonData, curMat);
+            Vector3 center = bone.GetInitBoneCenter(m_SkeletonData, curMat);
             Gizmos.DrawSphere(center, 0.01f);
 
             // 画骨骼连接
             if (bone.parentBone >= 0) {
                 Gizmos.color = Color.blue;
                 var parentBone = m_SkeletonData.m_BoneDatas[bone.parentBone];
-                Vector3 parentCenter = parentBone.GetBoneCenter(m_SkeletonData, curMat);
+                Vector3 parentCenter = parentBone.GetInitBoneCenter(m_SkeletonData, curMat);
                 Gizmos.DrawLine(center, parentCenter);
             }
         }
