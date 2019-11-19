@@ -29,6 +29,28 @@ class ExportCollada {
         return ret;
     }
 
+    private static string ConvertToContentStr(List<BoneWeight> lst, bool isBoneIndex) {
+        if (lst == null || lst.Count <= 0)
+            return string.Empty;
+        StringBuilder builder = new StringBuilder();
+        builder.Append('\n');
+        for (int i = 0; i < lst.Count; ++i) {
+            var weight = lst[i];
+            if (i > 0) {
+                builder.Append('\n');
+            }
+            if (isBoneIndex) {
+                builder.Append(weight.boneIndex0).Append(' ').Append(weight.boneIndex1).Append(' ').Append(weight.boneIndex2).Append(' ').Append(weight.boneIndex3);
+            } else {
+                builder.Append(weight.weight0).Append(' ').Append(weight.weight1).Append(' ').Append(weight.weight2).Append(' ').Append(weight.weight3);
+            }
+        }
+
+        builder.Append('\n');
+        string ret = builder.ToString();
+        return ret;
+    }
+
     private static string ConvertToContentStr(Vector2[] uvs) {
         if (uvs == null || uvs.Length <= 0)
             return string.Empty;
@@ -84,7 +106,8 @@ class ExportCollada {
         return ret;
     }
 
-    private static void AppendToRootNode(Mesh mesh, SkinnedMeshRenderer skl, XmlDocument doc, XmlElement root, string name) {
+    // isBoneWeightToUVs 是否将骨骼数据写入UV
+    private static void AppendToRootNode(Mesh mesh, SkinnedMeshRenderer skl, XmlDocument doc, XmlElement root, string name, bool isBoneWeightToUVs = true) {
         if (mesh == null || root == null || doc == null)
             return;
         List<Vector3> vec3List = new List<Vector3>();
@@ -190,16 +213,19 @@ class ExportCollada {
         List<Vector2[]> uvsList = new List<Vector2[]>();
         List<Vector2> vec2List = new List<Vector2>();
 
+        int usedTexcordId = -1;
+
         for (int i = 0; i < 8; ++i) {
             vec2List.Clear();
             mesh.GetUVs(i, vec2List);
             // 发现为空则退出
             if (vec2List.Count <= 0)
                 break;
-
+          
             Vector2[] uvs = vec2List.ToArray();
             // uvs = null;
             if (uvs != null && uvs.Length > 0) {
+                ++usedTexcordId;
                 uvsList.Add(uvs);
                 vertexSource = doc.CreateElement("source");
                 vertexSource.SetAttribute("id", string.Format("{0}-vertexs_uv{1}", name, i));
@@ -229,6 +255,94 @@ class ExportCollada {
                 paramNode.SetAttribute("name", "T");
                 paramNode.SetAttribute("type", "float");
                 posAccessor.AppendChild(paramNode);
+            }
+        }
+
+        List<BoneWeight> meshBoneWeightList = new List<BoneWeight>();
+        mesh.GetBoneWeights(meshBoneWeightList);
+        if (meshBoneWeightList.Count > 0) {
+            if (isBoneWeightToUVs && (usedTexcordId + 2 < 8)) {
+                // 将骨骼索引信息接入UV
+                vertexSource = doc.CreateElement("source");
+                vertexSource.SetAttribute("id", string.Format("{0}-vertexs_boneIdx_uv{1}", name, ++usedTexcordId));
+                meshNode.AppendChild(vertexSource);
+
+                possNode = doc.CreateElement("float_array");
+                possNode.SetAttribute("id", string.Format("boneIdx_uv{0}", usedTexcordId));
+                possNode.SetAttribute("count", string.Format("{0:D}", meshBoneWeightList.Count * 4));
+                possNode.InnerText = ConvertToContentStr(meshBoneWeightList, true);
+                vertexSource.AppendChild(possNode);
+
+                tech = doc.CreateElement("technique_common");
+                vertexSource.AppendChild(tech);
+
+                posAccessor = doc.CreateElement("accessor");
+                posAccessor.SetAttribute("id", string.Format("#{0}-boneIdx_uv{1}", name, usedTexcordId));
+                posAccessor.SetAttribute("count", meshBoneWeightList.Count.ToString());
+                posAccessor.SetAttribute("stride", "4");
+                tech.AppendChild(posAccessor);
+
+                paramNode = doc.CreateElement("param");
+                paramNode.SetAttribute("name", "BoneIndex1`");
+                paramNode.SetAttribute("type", "int");
+                posAccessor.AppendChild(paramNode);
+
+                paramNode = doc.CreateElement("param");
+                paramNode.SetAttribute("name", "BoneIndex2");
+                paramNode.SetAttribute("type", "int");
+                posAccessor.AppendChild(paramNode);
+
+                paramNode = doc.CreateElement("param");
+                paramNode.SetAttribute("name", "BoneIndex3");
+                paramNode.SetAttribute("type", "int");
+                posAccessor.AppendChild(paramNode);
+
+                paramNode = doc.CreateElement("param");
+                paramNode.SetAttribute("name", "BoneIndex4");
+                paramNode.SetAttribute("type", "int");
+                posAccessor.AppendChild(paramNode);
+
+                // 将骨骼权重信息写入UV
+                vertexSource = doc.CreateElement("source");
+                vertexSource.SetAttribute("id", string.Format("{0}-vertexs_boneWeight_uv{1}", name, ++usedTexcordId));
+                meshNode.AppendChild(vertexSource);
+
+                possNode = doc.CreateElement("float_array");
+                possNode.SetAttribute("id", string.Format("boneWeight_uv{0}", usedTexcordId));
+                possNode.SetAttribute("count", string.Format("{0:D}", meshBoneWeightList.Count * 4));
+                possNode.InnerText = ConvertToContentStr(meshBoneWeightList, false);
+                vertexSource.AppendChild(possNode);
+
+                tech = doc.CreateElement("technique_common");
+                vertexSource.AppendChild(tech);
+
+                posAccessor = doc.CreateElement("accessor");
+                posAccessor.SetAttribute("id", string.Format("#{0}-boneWeight_uv{1}", name, usedTexcordId));
+                posAccessor.SetAttribute("count", meshBoneWeightList.Count.ToString());
+                posAccessor.SetAttribute("stride", "4");
+                tech.AppendChild(posAccessor);
+
+                paramNode = doc.CreateElement("param");
+                paramNode.SetAttribute("name", "BoneWeight1`");
+                paramNode.SetAttribute("type", "float");
+                posAccessor.AppendChild(paramNode);
+
+                paramNode = doc.CreateElement("param");
+                paramNode.SetAttribute("name", "BoneWeight2");
+                paramNode.SetAttribute("type", "float");
+                posAccessor.AppendChild(paramNode);
+
+                paramNode = doc.CreateElement("param");
+                paramNode.SetAttribute("name", "BoneWeight3");
+                paramNode.SetAttribute("type", "float");
+                posAccessor.AppendChild(paramNode);
+
+                paramNode = doc.CreateElement("param");
+                paramNode.SetAttribute("name", "BoneWeight4");
+                paramNode.SetAttribute("type", "float");
+                posAccessor.AppendChild(paramNode);
+            } else {
+                Debug.LogError("TextureCoord Num > 8, Bone not support");
             }
         }
 
@@ -274,17 +388,34 @@ class ExportCollada {
                         ++appCnt;
                     }
 
+                    usedTexcordId = -1;
                     for (int j = 0; j < uvsList.Count; ++j) {
                         var uvs = uvsList[j];
                         if (uvs != null && uvs.Length > 0) {
                             iNode = doc.CreateElement("input");
                             iNode.SetAttribute("semantic", "TEXCOORD");
-                            iNode.SetAttribute("offset", (2 + j).ToString());
+                            iNode.SetAttribute("offset", (2 + (++usedTexcordId)).ToString());
                             iNode.SetAttribute("source", string.Format("#{0}-vertexs_uv{1}", name, j));
                             //iNode.SetAttribute("set", "0");
                             trianglesNode.AppendChild(iNode);
                             ++appCnt;
                         }
+                    }
+
+                    if (isBoneWeightToUVs && meshBoneWeightList.Count > 0) {
+                        iNode = doc.CreateElement("input");
+                        iNode.SetAttribute("semantic", "TEXCOORD");
+                        iNode.SetAttribute("offset", (2 + (++usedTexcordId)).ToString());
+                        iNode.SetAttribute("source", string.Format("#{0}-vertexs_boneIdx_uv{1}", name, usedTexcordId));
+                        trianglesNode.AppendChild(iNode);
+                        ++appCnt;
+
+                        iNode = doc.CreateElement("input");
+                        iNode.SetAttribute("semantic", "TEXCOORD");
+                        iNode.SetAttribute("offset", (2 + (++usedTexcordId)).ToString());
+                        iNode.SetAttribute("source", string.Format("#{0}-vertexs_boneWeight_uv{1}", name, usedTexcordId));
+                        trianglesNode.AppendChild(iNode);
+                        ++appCnt;
                     }
 
                     var pNode = doc.CreateElement("p");
