@@ -11,6 +11,49 @@ public struct _BoneData {
     public Vector3 initScale;
     // 相对于父节点的旋转
     public Quaternion initRot;
+    [NonSerialized]
+    private Matrix4x4 initWorldMatrix;
+    [NonSerialized]
+    private bool m_WordMatrixNoDirty;
+
+    // 相对于父节点
+    public Matrix4x4 GetInitLocalTransMatrix() {
+        Matrix4x4 ret = Matrix4x4.TRS(initOffset, initRot, initScale);
+        return ret;
+    }
+
+    private Matrix4x4 GetParentInitWorldMatrix(_SkeletonData skl) {
+        if (skl == null || parentBone < 0 || skl.m_BoneDatas  == null || parentBone >= skl.m_BoneDatas.Length)
+            return Matrix4x4.identity;
+        var pBone = skl.m_BoneDatas[parentBone];
+        Matrix4x4 ret = pBone.GetInitGlobalTransMatrix(skl);
+        return ret;
+    }
+
+    public Matrix4x4 GetInitGlobalTransMatrix(_SkeletonData skl) {
+        if (skl == null)
+            return GetInitLocalTransMatrix();
+
+        if (m_WordMatrixNoDirty) {
+            return initWorldMatrix;
+        }
+
+        if (parentBone < 0)
+            return GetInitLocalTransMatrix();
+
+        initWorldMatrix = GetParentInitWorldMatrix(skl) * GetInitLocalTransMatrix();
+
+        m_WordMatrixNoDirty = true;
+
+        return initWorldMatrix;
+    }
+
+    public Vector3 GetBoneCenter(_SkeletonData skl, Matrix4x4 root) {
+        Matrix4x4 mat = root * GetInitGlobalTransMatrix(skl);
+        Vector3 ret = mat.GetColumn(3);
+        return ret;
+    }
+
 }
 
 [Serializable]
