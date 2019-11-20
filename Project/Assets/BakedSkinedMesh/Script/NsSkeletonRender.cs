@@ -12,6 +12,24 @@ public class NsSkeletonRender : MonoBehaviour
     public MeshFilter m_SkeletonMesh = null;
     [Range(0, 1)]
     public float m_AnimPos = 0f;
+    private List<Vector4> m_BoneIndexList = new List<Vector4>();
+    private int m_LastMeshFilterInstance = -1;
+
+    private void InitBoneInfo() {
+        if (m_SkeletonMesh == null || m_SkeletonMesh.sharedMesh == null || m_SkeletonData == null) {
+            m_LastMeshFilterInstance = -1;
+            m_BoneIndexList.Clear();
+            return;
+        }
+
+        if (m_SkeletonMesh.GetInstanceID() != m_LastMeshFilterInstance) {
+            m_LastMeshFilterInstance = m_SkeletonMesh.GetInstanceID();
+            m_BoneIndexList.Clear();
+
+            var boneUVStartIdx = m_SkeletonData.m_StartBoneUV;
+            m_SkeletonMesh.sharedMesh.GetUVs(boneUVStartIdx, m_BoneIndexList);
+        }
+    }
 
     private void DrawBones() {
         if (m_SkeletonData == null || m_SkeletonData.m_BoneDatas == null || m_SkeletonData.m_BoneDatas.Length <= 0 || !m_IsShowBone)
@@ -46,8 +64,12 @@ public class NsSkeletonRender : MonoBehaviour
 
     // 蒙皮
     private void DoSkinMesh() {
-        if (m_SkeletonMesh != null && m_SkeletonMesh.sharedMesh != null) {
+        if (m_IsShowMesh && m_SkeletonData != null && m_SkeletonMesh != null && m_SkeletonMesh.sharedMesh != null) {
             var mesh = m_SkeletonMesh.sharedMesh;
+            InitBoneInfo();
+            if (m_BoneIndexList != null && m_BoneIndexList.Count > 0) {
+
+            }
         }
     }
 
