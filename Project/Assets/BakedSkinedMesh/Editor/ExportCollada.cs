@@ -406,6 +406,7 @@ class ExportCollada {
                             iNode.SetAttribute("semantic", "TEXCOORD");
                             iNode.SetAttribute("offset", (2 + (++usedTexcordId)).ToString());
                             iNode.SetAttribute("source", string.Format("#{0}-vertexs_uv{1}", name, j));
+                            iNode.SetAttribute("set", (1 + usedTexcordId).ToString());
                             //iNode.SetAttribute("set", "0");
                             trianglesNode.AppendChild(iNode);
                             ++appCnt;
@@ -417,6 +418,7 @@ class ExportCollada {
                         iNode.SetAttribute("semantic", "TEXCOORD");
                         iNode.SetAttribute("offset", (2 + (++usedTexcordId)).ToString());
                         iNode.SetAttribute("source", string.Format("#{0}-vertexs_boneIdx_uv{1}", name, usedTexcordId));
+                        iNode.SetAttribute("set", (1 + usedTexcordId).ToString());
                         trianglesNode.AppendChild(iNode);
                         ++appCnt;
 
@@ -424,6 +426,7 @@ class ExportCollada {
                         iNode.SetAttribute("semantic", "TEXCOORD");
                         iNode.SetAttribute("offset", (2 + (++usedTexcordId)).ToString());
                         iNode.SetAttribute("source", string.Format("#{0}-vertexs_boneWeight_uv{1}", name, usedTexcordId));
+                        iNode.SetAttribute("set", (1 + usedTexcordId).ToString());
                         trianglesNode.AppendChild(iNode);
                         ++appCnt;
                     }
