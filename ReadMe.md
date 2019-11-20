@@ -5,9 +5,10 @@
 
 ## 常用阴影实现
 **1.常用光照**
-**2.FlowMap使用**
-**3.NORMAL 生成**
-**4.AO生成**
+**2.Area Light**
+**3.FlowMap使用**
+**4.NORMAL 生成**
+**5.AO生成**
 
 ## LWRP研究
 
