@@ -16,6 +16,7 @@
 
 ## 常用后处理特效研究
 **1. SSAO**
+**2. HDR&ToneMapping**
 
 ## 常用NPR
 
