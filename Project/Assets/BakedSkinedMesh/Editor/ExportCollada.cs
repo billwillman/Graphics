@@ -107,8 +107,11 @@ class ExportCollada {
         return ret;
     }
 
+    public static int m_LastExportBoneUVStart = -1;
+
     // isBoneWeightToUVs 是否将骨骼数据写入UV
     private static void AppendToRootNode(Mesh mesh, SkinnedMeshRenderer skl, XmlDocument doc, XmlElement root, string name, bool isBoneWeightToUVs = true) {
+        m_LastExportBoneUVStart = -1;
         if (mesh == null || root == null || doc == null)
             return;
         List<Vector3> vec3List = new List<Vector3>();
@@ -267,6 +270,8 @@ class ExportCollada {
                 vertexSource = doc.CreateElement("source");
                 vertexSource.SetAttribute("id", string.Format("{0}-vertexs_boneIdx_uv{1}", name, ++usedTexcordId));
                 meshNode.AppendChild(vertexSource);
+
+                m_LastExportBoneUVStart = usedTexcordId;
 
                 possNode = doc.CreateElement("float_array");
                 possNode.SetAttribute("id", string.Format("boneIdx_uv{0}", usedTexcordId));
@@ -523,6 +528,7 @@ class ExportCollada {
                     boneData.parentBone = parentBoneIdx;
                 }
                 sklData.m_BoneDatas[i] = boneData;
+                sklData.m_StartBoneUV = m_LastExportBoneUVStart;
             }
 
             AssetDatabase.CreateAsset(sklData, fileName);

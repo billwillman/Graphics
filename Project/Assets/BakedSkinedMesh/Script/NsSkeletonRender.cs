@@ -5,10 +5,11 @@ using UnityEngine;
 public class NsSkeletonRender : MonoBehaviour
 {
     public bool m_IsShowBone = true;
+    public bool m_IsShowMesh = true;
     // 用来绘制骨骼
     public _SkeletonData m_SkeletonData = null;
     // 用来蒙皮的MESH
-    public Mesh m_SkeletonMesh = null;
+    public MeshFilter m_SkeletonMesh = null;
     [Range(0, 1)]
     public float m_AnimPos = 0f;
 
@@ -45,14 +46,34 @@ public class NsSkeletonRender : MonoBehaviour
 
     // 蒙皮
     private void DoSkinMesh() {
-        if (m_SkeletonMesh != null) {
-
+        if (m_SkeletonMesh != null && m_SkeletonMesh.sharedMesh != null) {
+            var mesh = m_SkeletonMesh.sharedMesh;
         }
     }
 
-    void OnDrawGizmos() {
+    private void DrawMesh() {
+        if (m_IsShowMesh && m_SkeletonMesh != null && m_SkeletonMesh.sharedMesh != null) {
+            var trans = this.transform;
+            Graphics.DrawMesh(m_SkeletonMesh.sharedMesh, trans.localToWorldMatrix, null, 0);
+           // Gizmos.color = Color.white;
+           // Gizmos.DrawMesh(m_SkeletonMesh.sharedMesh, trans.position, trans.rotation, trans.lossyScale);
+        }
+
+    }
+
+    private void Update() {
         UpdateAnim();
-        DrawBones();
         DoSkinMesh();
+    }
+
+    private void LateUpdate() {
+        DrawMesh();
+    }
+
+    void OnDrawGizmos() {
+       
+        DrawBones();
+        
+        
     }
 }

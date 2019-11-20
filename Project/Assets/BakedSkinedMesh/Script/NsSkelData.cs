@@ -58,6 +58,7 @@ public struct _BoneData {
 
 [Serializable]
 public class _SkeletonData : ScriptableObject {
+    public int m_StartBoneUV = -1;
     public int m_RootBoneIndex = -1;
     public _BoneData[] m_BoneDatas = null;
     public AnimationClip m_AnimClip = null;
