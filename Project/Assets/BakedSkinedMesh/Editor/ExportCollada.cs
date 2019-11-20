@@ -293,7 +293,7 @@ class ExportCollada {
                 tech.AppendChild(posAccessor);
 
                 paramNode = doc.CreateElement("param");
-                paramNode.SetAttribute("name", "BoneIndex1`");
+                paramNode.SetAttribute("name", "BoneIndex1");
                 paramNode.SetAttribute("type", "int");
                 posAccessor.AppendChild(paramNode);
 
@@ -333,7 +333,7 @@ class ExportCollada {
                 tech.AppendChild(posAccessor);
 
                 paramNode = doc.CreateElement("param");
-                paramNode.SetAttribute("name", "BoneWeight1`");
+                paramNode.SetAttribute("name", "BoneWeight1");
                 paramNode.SetAttribute("type", "float");
                 posAccessor.AppendChild(paramNode);
 

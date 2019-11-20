@@ -92,7 +92,7 @@ public class NsSkeletonRender : MonoBehaviour
         DrawMesh();
     }
 
-    void OnDrawGizmos() {
+    void OnDrawGizmosSelected() {
        
         DrawBones();
         
