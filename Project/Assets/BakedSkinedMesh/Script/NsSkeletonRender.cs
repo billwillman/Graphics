@@ -13,21 +13,28 @@ public class NsSkeletonRender : MonoBehaviour
     [Range(0, 1)]
     public float m_AnimPos = 0f;
     private List<Vector4> m_BoneIndexList = new List<Vector4>();
+    private List<Vector4> m_BoneWeightList = new List<Vector4>();
     private int m_LastMeshFilterInstance = -1;
+
+    private void ClearVertexBoneList() {
+        m_BoneWeightList.Clear();
+        m_BoneWeightList.Clear();
+    }
 
     private void InitBoneInfo() {
         if (m_SkeletonMesh == null || m_SkeletonMesh.sharedMesh == null || m_SkeletonData == null) {
             m_LastMeshFilterInstance = -1;
-            m_BoneIndexList.Clear();
+            ClearVertexBoneList();
             return;
         }
 
         if (m_SkeletonMesh.GetInstanceID() != m_LastMeshFilterInstance) {
             m_LastMeshFilterInstance = m_SkeletonMesh.GetInstanceID();
-            m_BoneIndexList.Clear();
+            ClearVertexBoneList();
 
-            var boneUVStartIdx = m_SkeletonData.m_StartBoneUV;
+             var boneUVStartIdx = m_SkeletonData.m_StartBoneUV;
             m_SkeletonMesh.sharedMesh.GetUVs(boneUVStartIdx, m_BoneIndexList);
+            m_SkeletonMesh.sharedMesh.GetUVs(boneUVStartIdx + 1, m_BoneWeightList);
             //if (m_BoneIndexList.Count > 0) {
             //    Debug.LogError(m_BoneIndexList[0].ToString());
            // }
