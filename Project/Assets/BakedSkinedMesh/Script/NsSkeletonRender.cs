@@ -77,7 +77,7 @@ public class NsSkeletonRender : MonoBehaviour
         if (m_IsShowMesh && m_SkeletonData != null && m_SkeletonMesh != null && m_SkeletonMesh.sharedMesh != null) {
             var mesh = m_SkeletonMesh.sharedMesh;
             InitBoneInfo();
-            if (m_BoneIndexList != null && m_BoneIndexList.Count > 0) {
+            if (m_BoneIndexList != null && m_BoneIndexList.Count > 0 && m_BoneWeightList != null && m_BoneWeightList.Count > 0) {
 
             }
         }
