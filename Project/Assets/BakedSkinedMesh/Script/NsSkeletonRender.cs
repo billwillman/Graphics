@@ -28,6 +28,9 @@ public class NsSkeletonRender : MonoBehaviour
 
             var boneUVStartIdx = m_SkeletonData.m_StartBoneUV;
             m_SkeletonMesh.sharedMesh.GetUVs(boneUVStartIdx, m_BoneIndexList);
+            //if (m_BoneIndexList.Count > 0) {
+            //    Debug.LogError(m_BoneIndexList[0].ToString());
+           // }
         }
     }
 
