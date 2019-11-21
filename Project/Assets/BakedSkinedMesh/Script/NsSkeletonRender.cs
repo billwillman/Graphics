@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,11 +15,13 @@ public class NsSkeletonRender : MonoBehaviour
     public float m_AnimPos = 0f;
     private List<Vector4> m_BoneIndexList = new List<Vector4>();
     private List<Vector4> m_BoneWeightList = new List<Vector4>();
+    private Vector3[] m_MeshVecs = null;
     private int m_LastMeshFilterInstance = -1;
 
     private void ClearVertexBoneList() {
         m_BoneWeightList.Clear();
         m_BoneWeightList.Clear();
+        m_MeshVecs = null;
     }
 
     private void InitBoneInfo() {
@@ -28,16 +31,20 @@ public class NsSkeletonRender : MonoBehaviour
             return;
         }
 
+        var mesh = m_SkeletonMesh.sharedMesh;
+        // 动态BUFFER
+        mesh.MarkDynamic();
         if (m_SkeletonMesh.GetInstanceID() != m_LastMeshFilterInstance) {
             m_LastMeshFilterInstance = m_SkeletonMesh.GetInstanceID();
             ClearVertexBoneList();
 
              var boneUVStartIdx = m_SkeletonData.m_StartBoneUV;
-            m_SkeletonMesh.sharedMesh.GetUVs(boneUVStartIdx, m_BoneIndexList);
-            m_SkeletonMesh.sharedMesh.GetUVs(boneUVStartIdx + 1, m_BoneWeightList);
+            mesh.GetUVs(boneUVStartIdx, m_BoneIndexList);
+            mesh.GetUVs(boneUVStartIdx + 1, m_BoneWeightList);
+            m_MeshVecs = mesh.vertices;
             //if (m_BoneIndexList.Count > 0) {
             //    Debug.LogError(m_BoneIndexList[0].ToString());
-           // }
+            // }
         }
     }
 
@@ -73,12 +80,40 @@ public class NsSkeletonRender : MonoBehaviour
     }
 
     // 蒙皮
-    private void DoSkinMesh() {
+    private void DoCpuSkinMesh(bool isInitPos = true) {
         if (m_IsShowMesh && m_SkeletonData != null && m_SkeletonMesh != null && m_SkeletonMesh.sharedMesh != null) {
             var mesh = m_SkeletonMesh.sharedMesh;
             InitBoneInfo();
             if (m_BoneIndexList != null && m_BoneIndexList.Count > 0 && m_BoneWeightList != null && m_BoneWeightList.Count > 0) {
 
+                //IntPtr pBuffer = mesh.GetNativeVertexBufferPtr();
+                // if (pBuffer != default(IntPtr)) {
+
+                //}
+                //UnsafeUtil.Vector3HackArraySizeCall
+                var bones = m_SkeletonData.m_BoneDatas;
+                if (isInitPos) {
+                    //var mat = Matrix4x4.identity;
+                    if (m_MeshVecs != null && m_MeshVecs.Length > 0 && m_MeshVecs.Length == m_BoneIndexList.Count && m_MeshVecs.Length == m_BoneWeightList.Count) {
+                        for (int i = 0; i < m_MeshVecs.Length; ++i) {
+                            Vector3 vec = m_MeshVecs[i];
+                            var bone1 = bones[(int)m_BoneIndexList[i].x];
+                            var bone2 = bones[(int)m_BoneIndexList[i].y];
+                            var bone3 = bones[(int)m_BoneIndexList[i].z];
+                            var bone4 = bones[(int)m_BoneIndexList[i].w];
+
+                            var p1 = bone1.GetInitGlobalTransMatrix(m_SkeletonData) * vec;
+                            var p2 = bone2.GetInitGlobalTransMatrix(m_SkeletonData) * vec;
+                            var p3 = bone3.GetInitGlobalTransMatrix(m_SkeletonData) * vec;
+                            var p4 = bone4.GetInitGlobalTransMatrix(m_SkeletonData) * vec;
+                            vec = p1 * m_BoneWeightList[i].x + p2 * m_BoneWeightList[i].y + p3 * m_BoneWeightList[i].z + p4 * m_BoneWeightList[i].w;
+                            m_MeshVecs[i] = vec;
+                        }
+
+                        mesh.vertices = m_MeshVecs;
+                        mesh.UploadMeshData(false);
+                    }
+                }
             }
         }
     }
@@ -93,9 +128,13 @@ public class NsSkeletonRender : MonoBehaviour
 
     }
 
+    private void Start() {
+        InitBoneInfo();
+        DoCpuSkinMesh(true);
+    }
+
     private void Update() {
         UpdateAnim();
-        DoSkinMesh();
     }
 
     private void LateUpdate() {
