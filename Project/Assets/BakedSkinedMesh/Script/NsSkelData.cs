@@ -30,6 +30,26 @@ public struct _BoneData {
         return ret;
     }
 
+    public Matrix4x4 GetInitGlobalParentTransMatrix(_SkeletonData skl) {
+        if (parentBone < 0)
+            return Matrix4x4.identity;
+        if (skl != null && skl.m_BoneDatas != null && parentBone < skl.m_BoneDatas.Length) {
+            var parent = skl.m_BoneDatas[parentBone];
+            return parent.GetInitGlobalTransMatrix(skl);
+        } else
+            return Matrix4x4.identity;
+    }
+
+    public Matrix4x4 GetInitLocalParentTransMatrix(_SkeletonData skl) {
+        if (parentBone < 0)
+            return Matrix4x4.identity;
+        if (skl != null && skl.m_BoneDatas != null && parentBone < skl.m_BoneDatas.Length) {
+            var parent = skl.m_BoneDatas[parentBone];
+            return parent.GetInitLocalTransMatrix();
+        } else
+            return Matrix4x4.identity;
+    }
+
     public Matrix4x4 GetInitGlobalTransMatrix(_SkeletonData skl) {
         if (skl == null)
             return GetInitLocalTransMatrix();
