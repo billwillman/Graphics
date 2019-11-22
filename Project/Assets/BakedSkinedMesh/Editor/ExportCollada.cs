@@ -550,7 +550,7 @@ class ExportCollada {
         }
     }
 
-    public static void Export(List<Mesh> meshes, Renderer[] skls, string fileName, string name = "Noname") {
+    public static void Export(List<Mesh> meshes, Renderer[] skls, string fileName, bool isExportBone = false, string name = "Noname") {
         if (meshes == null || meshes.Count <= 0 || skls == null || meshes.Count != skls.Length)
             return;
 
