@@ -7,6 +7,7 @@ public class NsSkeletonRender : MonoBehaviour
 {
     public bool m_IsShowBone = true;
     public bool m_IsShowMesh = true;
+    public bool m_IsUseUVBoneWeight = true;
     // 用来绘制骨骼
     public _SkeletonData m_SkeletonData = null;
     // 用来蒙皮的MESH
@@ -54,10 +55,16 @@ public class NsSkeletonRender : MonoBehaviour
             m_LastMeshFilterInstance = m_SkeletonMesh.GetInstanceID();
             ClearVertexBoneList();
 
-             var boneUVStartIdx = m_SkeletonData.m_StartBoneUV;
-            mesh.GetUVs(boneUVStartIdx, m_BoneIndexList);
-            mesh.GetUVs(boneUVStartIdx + 1, m_BoneWeightList);
+            if (m_IsUseUVBoneWeight) {
+                var boneUVStartIdx = m_SkeletonData.m_StartBoneUV;
+                mesh.GetUVs(boneUVStartIdx, m_BoneIndexList);
+                mesh.GetUVs(boneUVStartIdx + 1, m_BoneWeightList);
+            } else {
+                m_BoneIndexList = m_SkeletonData.BoneIndexList;
+                m_BoneWeightList = m_SkeletonData.BoneWeightList;
+            }
             m_MeshVecs = mesh.vertices;
+
             //if (m_BoneIndexList.Count > 0) {
             //    Debug.LogError(m_BoneIndexList[0].ToString());
             // }
@@ -121,7 +128,7 @@ public class NsSkeletonRender : MonoBehaviour
                             var bone3 = bones[idx3];
                             var bone4 = bones[idx4];
 
-                            var p1 = bone1.GetInitGlobalTransMatrix(m_SkeletonData) * bone1.bindPose * vec;
+                            var p1 = bone1.GetInitGlobalTransMatrix(m_SkeletonData) *  bone1.bindPose * vec;
                             var p2 = bone2.GetInitGlobalTransMatrix(m_SkeletonData) * bone2.bindPose * vec;
                             var p3 = bone3.GetInitGlobalTransMatrix(m_SkeletonData) * bone3.bindPose * vec;
                             var p4 = bone4.GetInitGlobalTransMatrix(m_SkeletonData) * bone4.bindPose * vec;

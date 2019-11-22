@@ -545,6 +545,29 @@ class ExportCollada {
                 sklData.m_StartBoneUV = m_LastExportBoneUVStart;
             }
 
+            if (skl.sharedMesh != null && skl.sharedMesh.isReadable) {
+                if (skl.sharedMesh.vertexCount > 0) {
+                    var boneWeights = skl.sharedMesh.boneWeights;
+                    if (boneWeights != null && boneWeights.Length > 0) {
+                        sklData.m_VertexBoneData = new _VertexBoneData[boneWeights.Length];
+                        for (int i = 0; i < boneWeights.Length; ++i) {
+                            var vBoneData = new _VertexBoneData();
+                            vBoneData.boneIndex1 = boneWeights[i].boneIndex0;
+                            vBoneData.boneIndex2 = boneWeights[i].boneIndex1;
+                            vBoneData.boneIndex3 = boneWeights[i].boneIndex2;
+                            vBoneData.boneIndex4 = boneWeights[i].boneIndex3;
+                            vBoneData.boneWeight1 = boneWeights[i].weight0;
+                            vBoneData.boneWeight2 = boneWeights[i].weight1;
+                            vBoneData.boneWeight3 = boneWeights[i].weight2;
+                            vBoneData.boneWeight4 = boneWeights[i].weight3;
+
+                            sklData.m_VertexBoneData[i] = vBoneData;
+                        }
+                    }
+                }
+            } else
+                Debug.LogError("SkinedMesh is not isReadable~! so _vertexBoneData not export");
+
             AssetDatabase.CreateAsset(sklData, fileName);
 #endif
         }

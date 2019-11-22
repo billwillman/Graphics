@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 [Serializable]
@@ -80,11 +82,26 @@ public struct _BoneData {
 }
 
 [Serializable]
+public struct _VertexBoneData {
+    public int boneIndex1;
+    public int boneIndex2;
+    public int boneIndex3;
+    public int boneIndex4;
+
+    public float boneWeight1;
+    public float boneWeight2;
+    public float boneWeight3;
+    public float boneWeight4;
+}
+
+[Serializable]
 public class _SkeletonData : ScriptableObject {
     public int m_StartBoneUV = -1;
     public int m_RootBoneIndex = -1;
     public _BoneData[] m_BoneDatas = null;
     public AnimationClip m_AnimClip = null;
+    // 再存一份
+    public _VertexBoneData[] m_VertexBoneData = null;
     public Matrix4x4[] bindPoseArray {
         get {
             Matrix4x4[] ret = null;
@@ -96,5 +113,33 @@ public class _SkeletonData : ScriptableObject {
             }
             return ret;
         }
+    }
+
+    public List<Vector4> BoneIndexList {
+        get {
+            List<Vector4> ret = new List<Vector4>();
+            if (m_VertexBoneData != null) {
+                for (int  i = 0; i < m_VertexBoneData.Length; ++i) {
+                    var data = m_VertexBoneData[i];
+                    Vector4 vec = new Vector4(data.boneIndex1, data.boneIndex2, data.boneIndex3, data.boneIndex4);
+                    ret.Add(vec);
+                }
+            }
+            return ret;
+        }
+    }
+
+    public List<Vector4> BoneWeightList {
+        get {
+            List<Vector4> ret = new List<Vector4>();
+            if (m_VertexBoneData != null) {
+                for (int i = 0; i < m_VertexBoneData.Length; ++i) {
+                    var data = m_VertexBoneData[i];
+                    Vector4 vec = new Vector4(data.boneWeight1, data.boneWeight2, data.boneWeight3, data.boneWeight4);
+                    ret.Add(vec);
+                }
+            }
+            return ret;
+         }
     }
 }
