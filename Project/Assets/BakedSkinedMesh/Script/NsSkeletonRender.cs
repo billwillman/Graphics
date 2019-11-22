@@ -142,8 +142,9 @@ public class NsSkeletonRender : MonoBehaviour
                             var p3 = g3 * bone3.bindPose * vec;
                             var p4 = g4 * bone4.bindPose * vec;
                             vec = p1 * w1 + p2 * w2 + p3 * w3 + p4 * w4;
-                            
-                           // m_MeshVecs[i] = new Vector3(1, 1, 1);
+
+                            // m_MeshVecs[i] = new Vector3(1, 1, 1);
+                            m_MeshVecs[i] = vec;
                         }
 
                        
