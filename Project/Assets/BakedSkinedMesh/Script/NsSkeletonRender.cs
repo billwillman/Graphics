@@ -127,13 +127,23 @@ public class NsSkeletonRender : MonoBehaviour
                             var bone2 = bones[idx2];
                             var bone3 = bones[idx3];
                             var bone4 = bones[idx4];
+                            float w1 = m_BoneWeightList[i].x;
+                            float w2 = m_BoneWeightList[i].y;
+                            float w3 = m_BoneWeightList[i].z;
+                            float w4 = m_BoneWeightList[i].w;
 
-                            var p1 = bone1.GetInitGlobalTransMatrix(m_SkeletonData) *  bone1.bindPose * vec;
-                            var p2 = bone2.GetInitGlobalTransMatrix(m_SkeletonData) * bone2.bindPose * vec;
-                            var p3 = bone3.GetInitGlobalTransMatrix(m_SkeletonData) * bone3.bindPose * vec;
-                            var p4 = bone4.GetInitGlobalTransMatrix(m_SkeletonData) * bone4.bindPose * vec;
-                            vec = p1 * m_BoneWeightList[i].x + p2 * m_BoneWeightList[i].y + p3 * m_BoneWeightList[i].z + p4 * m_BoneWeightList[i].w;
-                            m_MeshVecs[i] = vec;
+                            Matrix4x4 g1 = bone1.GetInitGlobalTransMatrix(m_SkeletonData);
+                            Matrix4x4 g2 = bone2.GetInitGlobalTransMatrix(m_SkeletonData);
+                            Matrix4x4 g3 = bone3.GetInitGlobalTransMatrix(m_SkeletonData);
+                            Matrix4x4 g4 = bone4.GetInitGlobalTransMatrix(m_SkeletonData);
+
+                            var p1 = g1 * bone1.bindPose * vec;
+                            var p2 = g2 * bone2.bindPose * vec;
+                            var p3 = g3 * bone3.bindPose * vec;
+                            var p4 = g4 * bone4.bindPose * vec;
+                            vec = p1 * w1 + p2 * w2 + p3 * w3 + p4 * w4;
+                            
+                           // m_MeshVecs[i] = new Vector3(1, 1, 1);
                         }
 
                        
