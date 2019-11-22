@@ -10,7 +10,7 @@ public class NsSkeletonRender : MonoBehaviour
     // 用来绘制骨骼
     public _SkeletonData m_SkeletonData = null;
     // 用来蒙皮的MESH
-    public MeshFilter m_SkeletonMesh = null;
+    public Mesh m_SkeletonMesh = null;
     [Range(0, 1)]
     public float m_AnimPos = 0f;
     private List<Vector4> m_BoneIndexList = new List<Vector4>();
@@ -37,7 +37,7 @@ public class NsSkeletonRender : MonoBehaviour
     }
 
     private void InitBoneInfo() {
-        if (m_SkeletonMesh == null || m_SkeletonMesh.sharedMesh == null || m_SkeletonData == null) {
+        if (m_SkeletonMesh == null || m_SkeletonMesh == null || m_SkeletonData == null) {
             DestroyMesh();
             m_LastMeshFilterInstance = -1;
             ClearVertexBoneList();
@@ -45,10 +45,11 @@ public class NsSkeletonRender : MonoBehaviour
         }
 
         DestroyMesh();
-        m_Mesh = GameObject.Instantiate(m_SkeletonMesh.sharedMesh);
+        m_Mesh = GameObject.Instantiate(m_SkeletonMesh);
         var mesh = m_Mesh;
         // 动态BUFFER
         mesh.MarkDynamic();
+       // m_Mesh.UploadMeshData(false);
         if (m_SkeletonMesh.GetInstanceID() != m_LastMeshFilterInstance) {
             m_LastMeshFilterInstance = m_SkeletonMesh.GetInstanceID();
             ClearVertexBoneList();
@@ -96,7 +97,7 @@ public class NsSkeletonRender : MonoBehaviour
 
     // 蒙皮
     private void DoCpuSkinMesh(bool isInitPos = true) {
-        if (m_IsShowMesh && m_SkeletonData != null && m_SkeletonMesh != null && m_SkeletonMesh.sharedMesh != null && m_Mesh != null) {
+        if (m_IsShowMesh && m_SkeletonData != null && m_SkeletonMesh != null && m_SkeletonMesh != null && m_Mesh != null) {
             InitBoneInfo();
             if (m_BoneIndexList != null && m_BoneIndexList.Count > 0 && m_BoneWeightList != null && m_BoneWeightList.Count > 0) {
 
@@ -134,8 +135,8 @@ public class NsSkeletonRender : MonoBehaviour
                       m_Mesh.vertices = m_MeshVecs;
                       m_Mesh.UploadMeshData(false);
 
-                    //mesh.bindposes = m_SkeletonData.bindPoseArray;
-                    //mesh.UploadMeshData(false);
+                   // m_Mesh.bindposes = m_SkeletonData.bindPoseArray;
+                    //m_Mesh.UploadMeshData(false);
                 }
                 
             }
@@ -143,7 +144,7 @@ public class NsSkeletonRender : MonoBehaviour
     }
 
     private void DrawMesh() {
-        if (m_IsShowMesh && m_SkeletonMesh != null && m_SkeletonMesh.sharedMesh != null && m_Mesh != null) {
+        if (m_IsShowMesh && m_SkeletonMesh != null && m_SkeletonMesh != null && m_Mesh != null) {
             var trans = this.transform;
             Graphics.DrawMesh(m_Mesh, trans.localToWorldMatrix, null, 0);
            // Gizmos.color = Color.white;
