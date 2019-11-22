@@ -137,6 +137,8 @@ public class NsSkeletonRender : MonoBehaviour
                         }
 
                        
+                    } else {
+                        Debug.LogError("MeshVec num is not equal boneindex and boneweight");
                     }
 
                       m_Mesh.vertices = m_MeshVecs;
