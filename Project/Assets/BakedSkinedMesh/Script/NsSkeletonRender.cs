@@ -97,10 +97,14 @@ public class NsSkeletonRender : MonoBehaviour
                     if (m_MeshVecs != null && m_MeshVecs.Length > 0 && m_MeshVecs.Length == m_BoneIndexList.Count && m_MeshVecs.Length == m_BoneWeightList.Count) {
                         for (int i = 0; i < m_MeshVecs.Length; ++i) {
                             Vector3 vec = m_MeshVecs[i];
-                            var bone1 = bones[(int)m_BoneIndexList[i].x];
-                            var bone2 = bones[(int)m_BoneIndexList[i].y];
-                            var bone3 = bones[(int)m_BoneIndexList[i].z];
-                            var bone4 = bones[(int)m_BoneIndexList[i].w];
+                            int idx1 = (int)m_BoneIndexList[i].x;
+                            int idx2 = (int)m_BoneIndexList[i].y;
+                            int idx3 = (int)m_BoneIndexList[i].z;
+                            int idx4 = (int)m_BoneIndexList[i].w;
+                            var bone1 = bones[idx1];
+                            var bone2 = bones[idx2];
+                            var bone3 = bones[idx3];
+                            var bone4 = bones[idx4];
 
                             var p1 = bone1.GetInitGlobalTransMatrix(m_SkeletonData) * bone1.bindPose * vec;
                             var p2 = bone2.GetInitGlobalTransMatrix(m_SkeletonData) * bone2.bindPose * vec;
@@ -110,10 +114,16 @@ public class NsSkeletonRender : MonoBehaviour
                             m_MeshVecs[i] = vec;
                         }
 
-                        mesh.vertices = m_MeshVecs;
-                        mesh.UploadMeshData(false);
+                       
                     }
+
+                      mesh.vertices = m_MeshVecs;
+                      mesh.UploadMeshData(false);
+
+                    //mesh.bindposes = m_SkeletonData.bindPoseArray;
+                    //mesh.UploadMeshData(false);
                 }
+                
             }
         }
     }

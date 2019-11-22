@@ -85,4 +85,16 @@ public class _SkeletonData : ScriptableObject {
     public int m_RootBoneIndex = -1;
     public _BoneData[] m_BoneDatas = null;
     public AnimationClip m_AnimClip = null;
+    public Matrix4x4[] bindPoseArray {
+        get {
+            Matrix4x4[] ret = null;
+            if (m_BoneDatas == null || m_BoneDatas.Length <= 0)
+                return ret;
+            ret = new Matrix4x4[m_BoneDatas.Length];
+            for (int i = 0; i < m_BoneDatas.Length; ++i) {
+                ret[i] = m_BoneDatas[i].bindPose;
+            }
+            return ret;
+        }
+    }
 }
