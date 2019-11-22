@@ -507,6 +507,12 @@ class ExportCollada {
         var bones = skl.bones;
         if (bones != null && bones.Length > 0) {
 #if UNITY_EDITOR
+            var mesh = skl.sharedMesh;
+            if (mesh == null)
+                return;
+            var bindposes = mesh.bindposes;
+            if (bindposes == null || bindposes.Length <= 0)
+                return;
             // 先遍历InstanceID对应INDEX
             Dictionary<int, int> boneInstanceIDToIndexMap = new Dictionary<int, int>();
             for (int i = 0; i < bones.Length; ++i) {
@@ -522,6 +528,7 @@ class ExportCollada {
                 boneData.initOffset = bone.localPosition;
                 boneData.initScale = bone.localScale;
                 boneData.initRot = bone.localRotation;
+                boneData.bindPose = mesh.bindposes[i];
                 if (bone.parent == null) {
                     boneData.parentBone = -1;
                     sklData.m_RootBoneIndex = i;

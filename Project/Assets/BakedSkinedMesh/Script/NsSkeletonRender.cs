@@ -102,10 +102,10 @@ public class NsSkeletonRender : MonoBehaviour
                             var bone3 = bones[(int)m_BoneIndexList[i].z];
                             var bone4 = bones[(int)m_BoneIndexList[i].w];
 
-                            var p1 = bone1.GetInitGlobalTransMatrix(m_SkeletonData) * vec;
-                            var p2 = bone2.GetInitGlobalTransMatrix(m_SkeletonData) * vec;
-                            var p3 = bone3.GetInitGlobalTransMatrix(m_SkeletonData) * vec;
-                            var p4 = bone4.GetInitGlobalTransMatrix(m_SkeletonData) * vec;
+                            var p1 = bone1.GetInitGlobalTransMatrix(m_SkeletonData) * bone1.bindPose * vec;
+                            var p2 = bone2.GetInitGlobalTransMatrix(m_SkeletonData) * bone2.bindPose * vec;
+                            var p3 = bone3.GetInitGlobalTransMatrix(m_SkeletonData) * bone3.bindPose * vec;
+                            var p4 = bone4.GetInitGlobalTransMatrix(m_SkeletonData) * bone4.bindPose * vec;
                             vec = p1 * m_BoneWeightList[i].x + p2 * m_BoneWeightList[i].y + p3 * m_BoneWeightList[i].z + p4 * m_BoneWeightList[i].w;
                             m_MeshVecs[i] = vec;
                         }
@@ -128,9 +128,13 @@ public class NsSkeletonRender : MonoBehaviour
 
     }
 
+    private void DoBindPose() {
+        DoCpuSkinMesh(true);
+    }
+
     private void Start() {
         InitBoneInfo();
-        DoCpuSkinMesh(true);
+        DoBindPose();
     }
 
     private void Update() {
