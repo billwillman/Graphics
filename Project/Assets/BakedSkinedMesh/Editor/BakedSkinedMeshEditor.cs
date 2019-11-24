@@ -59,7 +59,7 @@ public class BakedSkinedMeshEditor : EditorWindow
     }
 
     // 合并SkinedMesh到MESH
-    void CombineSkinedMeshes() {
+    void CombineSkinedMeshes(int sel = 0) {
 #if UNITY_EDITOR
         
         if (m_SelGameObj == null || m_SelSkinMehes == null || m_SelSkinMehes.Length <= 0) {
@@ -107,8 +107,14 @@ public class BakedSkinedMeshEditor : EditorWindow
             }
         }
 
-        filePath = Path.ChangeExtension(filePath, ".dae");
-        ExportCollada.Export(meshList, m_SelSkinMehes, filePath);
+        if (sel == 0)
+        {
+            filePath = Path.ChangeExtension(filePath, ".dae");
+            ExportCollada.Export(meshList, m_SelSkinMehes, filePath);
+        } else if (sel == 1)
+        {
+            ExportCollada.ExportSklsToAsset(m_SelSkinMehes, filePath);
+        }
       //  ExportCollada.ExportToScene(meshList, m_SelSkinMehes);
 
         AssetDatabase.Refresh();
@@ -184,6 +190,10 @@ public class BakedSkinedMeshEditor : EditorWindow
                 if (GUILayout.Button("合并所有到普通MESH"))
                 {
                     CombineSkinedMeshes();
+                }
+                if (GUILayout.Button("导出SkinedMesh数据到Asset"))
+                {
+                    CombineSkinedMeshes(1);
                 }
             }
         }

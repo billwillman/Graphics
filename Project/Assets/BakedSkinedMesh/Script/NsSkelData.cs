@@ -82,6 +82,24 @@ public struct _BoneData {
 }
 
 [Serializable]
+public struct _IndexsData
+{
+    public int[] index;
+    public MeshTopology topology;
+}
+
+[Serializable]
+public struct _VertexData
+{
+    public Vector3[] positons;
+    public Vector3[] normals;
+    public Color[] colors;
+    public Vector2[] uvs;
+    public _IndexsData[] indexes;
+    public UnityEngine.Rendering.IndexFormat indexFormat;
+}
+
+[Serializable]
 public struct _VertexBoneData {
     public int boneIndex1;
     public int boneIndex2;
@@ -95,11 +113,36 @@ public struct _VertexBoneData {
 }
 
 [Serializable]
+public class _VertexsData : ScriptableObject
+{
+    public _VertexData[] m_Vertexs = null;
+    public void Init(Mesh mesh)
+    {
+        if (mesh != null)
+        {
+            m_Vertexs = new _VertexData[1];
+            m_Vertexs[0].positons = mesh.vertices;
+            m_Vertexs[0].normals = mesh.normals;
+            m_Vertexs[0].uvs = mesh.uv;
+            m_Vertexs[0].colors = mesh.colors;
+            m_Vertexs[0].indexFormat = mesh.indexFormat;
+            for (int i = 0; i < mesh.subMeshCount; ++i)
+            {
+                int[] indexs = mesh.GetIndices(i);
+                if (m_Vertexs[0].indexes == null)
+                    m_Vertexs[0].indexes = new _IndexsData[mesh.subMeshCount];
+                m_Vertexs[0].indexes[i].index = indexs;
+                m_Vertexs[0].indexes[i].topology = mesh.GetTopology(i);
+            }
+        }
+    }
+}
+
+[Serializable]
 public class _SkeletonData : ScriptableObject {
     public int m_StartBoneUV = -1;
     public int m_RootBoneIndex = -1;
     public _BoneData[] m_BoneDatas = null;
-    public AnimationClip m_AnimClip = null;
     // 再存一份
     public _VertexBoneData[] m_VertexBoneData = null;
     public Matrix4x4[] bindPoseArray {

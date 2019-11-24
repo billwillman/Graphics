@@ -500,6 +500,20 @@ class ExportCollada {
         }
     }
 
+    private static void ExportMeshAsset(SkinnedMeshRenderer skl, string fileName)
+    {
+        if (skl == null || string.IsNullOrEmpty(fileName))
+            return;
+#if UNITY_EDITOR
+        var mesh = skl.sharedMesh;
+        if (mesh == null)
+            return;
+        _VertexsData vertexsData = ScriptableObject.CreateInstance<_VertexsData>();
+        vertexsData.Init(mesh);
+        AssetDatabase.CreateAsset(vertexsData, fileName);
+#endif
+    }
+
     // 自定義Asset
     private static void ExportSklAsset(SkinnedMeshRenderer skl, string fileName) {
         if (skl == null)
@@ -573,7 +587,42 @@ class ExportCollada {
         }
     }
 
-    public static void Export(List<Mesh> meshes, Renderer[] skls, string fileName, bool isExportBone = false, string name = "Noname") {
+    public static void ExportSklsToAsset(Renderer[] skls, string fileName)
+    {
+        if (skls == null || skls.Length <= 0 || string.IsNullOrEmpty(fileName))
+            return;
+
+        // 到處骨骼Skinned信息
+        string noExtFileName = System.IO.Path.GetFileNameWithoutExtension(fileName);
+        string filePathName = System.IO.Path.GetDirectoryName(fileName);
+        noExtFileName = string.Format("{0}/{1}", filePathName, noExtFileName);
+        noExtFileName = noExtFileName.Replace('\\', '/');
+        int startPos = noExtFileName.IndexOf("Assets/", StringComparison.CurrentCultureIgnoreCase);
+        if (startPos >= 0)
+        {
+            if (startPos > 0)
+                noExtFileName = noExtFileName.Substring(startPos);
+            if (skls != null && (skls.Length > 0))
+            {
+                for (int i = 0; i < skls.Length; ++i)
+                {
+                    string sklFileName = string.Format("{0}_{1:D}.asset", noExtFileName, i);
+                    var skl = skls[i] as SkinnedMeshRenderer;
+                    ExportSklAsset(skl, sklFileName);
+                    string vecFileName = string.Format("{0}_vertex_{1:D}.asset", noExtFileName, i);
+                    ExportMeshAsset(skl, vecFileName);
+                }
+
+                AssetDatabase.Refresh();
+            }
+        }
+        else
+        {
+            Debug.LogError("Skleton only Save Assets/ Path");
+        }
+    }
+
+    public static void Export(List<Mesh> meshes, Renderer[] skls, string fileName, string name = "Noname") {
         if (meshes == null || meshes.Count <= 0 || skls == null || meshes.Count != skls.Length)
             return;
 
@@ -618,26 +667,7 @@ class ExportCollada {
         // 保存到文件
         doc.Save(fileName);
 
-        // 到處骨骼Skinned信息
-        string noExtFileName = System.IO.Path.GetFileNameWithoutExtension(fileName);
-        string filePathName = System.IO.Path.GetDirectoryName(fileName);
-        noExtFileName = string.Format("{0}/{1}", filePathName, noExtFileName);
-        noExtFileName = noExtFileName.Replace('\\', '/');
-        int startPos = noExtFileName.IndexOf("Assets/", StringComparison.CurrentCultureIgnoreCase);
-        if (startPos >= 0) {
-            if (startPos > 0)
-                noExtFileName = noExtFileName.Substring(startPos);
-            if (skls != null && (skls.Length > 0)) {
-                for (int i = 0; i < skls.Length; ++i) {
-                    string sklFileName = string.Format("{0}_{1:D}.asset", noExtFileName, i);
-                    ExportSklAsset(skls[i] as SkinnedMeshRenderer, sklFileName);
-                }
-
-                AssetDatabase.Refresh();
-            }
-        } else {
-            Debug.LogError("Skleton only Save Assets/ Path");
-        }
+       
     }
 
 }
