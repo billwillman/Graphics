@@ -139,6 +139,18 @@ public class NsSkeletonRender : MonoBehaviour
     private void UpdateAnim() {
     }
 
+    private string Vec3ToString(Vector3 v)
+    {
+        string ret = string.Format("(x:{0}, y:{1}, z{2})", v.x.ToString(), v.y.ToString(), v.z.ToString());
+        return ret;
+    }
+
+    private Vector3 BoneInitTransVec(_SkeletonData skl, _BoneData bone, Vector3 vec)
+    {
+        Vector3 ret = bone.GetInitGlobalTransMatrix(skl) * bone.bindPose * vec;
+        return ret;
+    }
+
     // 蒙皮
     private void DoCpuSkinMesh(bool isInitPos = true) {
         if (m_IsShowMesh && m_SkeletonData != null && m_Mesh != null && m_Mesh != null) {
@@ -169,17 +181,12 @@ public class NsSkeletonRender : MonoBehaviour
                             float w3 = m_BoneWeightList[i].z;
                             float w4 = m_BoneWeightList[i].w;
 
-                            Matrix4x4 g1 = bone1.GetInitGlobalTransMatrix(m_SkeletonData);
-                            Matrix4x4 g2 = bone2.GetInitGlobalTransMatrix(m_SkeletonData);
-                            Matrix4x4 g3 = bone3.GetInitGlobalTransMatrix(m_SkeletonData);
-                            Matrix4x4 g4 = bone4.GetInitGlobalTransMatrix(m_SkeletonData);
-
-                            var p1 = g1 * bone1.bindPose * vec;
-                            var p2 = g2 * bone2.bindPose * vec;
-                            var p3 = g3 * bone3.bindPose * vec;
-                            var p4 = g4 * bone4.bindPose * vec;
+                            var p1 = BoneInitTransVec(m_SkeletonData, bone1, vec);
+                            var p2 = BoneInitTransVec(m_SkeletonData, bone2, vec);
+                            var p3 = BoneInitTransVec(m_SkeletonData, bone3, vec);
+                            var p4 = BoneInitTransVec(m_SkeletonData, bone4, vec);
                             vec = p1 * w1 + p2 * w2 + p3 * w3 + p4 * w4;
-
+                            Debug.LogFormat("old vec: {0} === new vec: {1}", Vec3ToString(m_MeshVecs[i]), Vec3ToString(vec));
                             // m_MeshVecs[i] = new Vector3(1, 1, 1);
                             m_MeshVecs[i] = vec;
                         }
