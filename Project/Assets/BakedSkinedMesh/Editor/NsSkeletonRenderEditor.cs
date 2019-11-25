@@ -3,12 +3,31 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
+[CustomEditor(typeof(NsSkeletonRender))]
 public class NsSkeletonRenderEditor : Editor
 {
-   
+    public override void OnInspectorGUI() {
+        base.OnInspectorGUI();
+        var r = this.target as NsSkeletonRender;
+        if (r != null) {
+            if (Application.isPlaying) {
+                if (GUILayout.Button("导出当前Mesh")) {
+                    var mesh = r.RunTimeMesh;
+                    if (mesh != null) {
+                        List<Mesh> lst = new List<Mesh>();
+                        lst.Add(mesh);
+                        Renderer[] rlst = new Renderer[1];
+                        rlst[0] = r.GetComponent<Renderer>();
+
+                        ExportCollada.Export(lst, rlst, "Assets/NsSkeleton_RunTime.dae");
+                    }
+                }
+            }
+        }
+    }
 }
 
-[CustomEditor(typeof(GameObject))]
+//[CustomEditor(typeof(GameObject))]
 public class NsGameObjectEditor: Editor {
 
     private void DrawMat(Matrix4x4 mat) {

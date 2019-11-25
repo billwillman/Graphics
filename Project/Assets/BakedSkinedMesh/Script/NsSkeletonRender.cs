@@ -3,11 +3,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(MeshRenderer), typeof(MeshFilter))]
 public class NsSkeletonRender : MonoBehaviour
 {
     public bool m_IsShowBone = true;
     public bool m_IsShowMesh = true;
     public bool m_IsUseUVBoneWeight = true;
+    public Material m_SkeletonMeshMat = null;
     // 用来绘制骨骼
     public _SkeletonData m_SkeletonData = null;
     // 用来蒙皮的MESH
@@ -20,6 +22,14 @@ public class NsSkeletonRender : MonoBehaviour
     private Vector3[] m_MeshVecs = null;
     private Mesh m_Mesh = null;
     private int m_LastMeshFilterInstance = -1;
+    private MeshRenderer m_MeshRender = null;
+    private MeshFilter m_MeshFilter = null;
+
+    public Mesh RunTimeMesh {
+        get {
+            return m_Mesh;
+        }
+    }
 
     private void DestroyMesh() {
         if (m_Mesh != null) {
@@ -166,8 +176,13 @@ public class NsSkeletonRender : MonoBehaviour
                 var bones = m_SkeletonData.m_BoneDatas;
                 if (isInitPos) {
                     //var mat = Matrix4x4.identity;
-                    if (m_MeshVecs != null && m_MeshVecs.Length > 0 && m_MeshVecs.Length == m_BoneIndexList.Count && m_MeshVecs.Length == m_BoneWeightList.Count) {
-                        for (int i = 0; i < m_MeshVecs.Length; ++i) {
+                    if (m_MeshVecs != null && m_MeshVecs.Length > 0) {
+                        int maxVec = m_MeshVecs.Length;
+                        if (m_BoneIndexList.Count < maxVec)
+                            maxVec = m_BoneIndexList.Count;
+                        if (m_BoneWeightList.Count < maxVec)
+                            maxVec = m_BoneWeightList.Count;
+                        for (int i = 0; i < maxVec; ++i) {
                             Vector3 vec = m_MeshVecs[i];
                             int idx1 = (int)m_BoneIndexList[i].x;
                             int idx2 = (int)m_BoneIndexList[i].y;
@@ -211,10 +226,18 @@ public class NsSkeletonRender : MonoBehaviour
     private void DrawMesh() {
         if (m_IsShowMesh && m_Mesh != null) {
            //, Debug.Log("--------------------abcdef");
-            var trans = this.transform;
-            Graphics.DrawMesh(m_Mesh, trans.localToWorldMatrix, null, 0);
-           // Gizmos.color = Color.white;
-           // Gizmos.DrawMesh(m_SkeletonMesh.sharedMesh, trans.position, trans.rotation, trans.lossyScale);
+           if (m_MeshRender == null) {
+                m_MeshRender = GetComponent<MeshRenderer>();
+            }
+            if (m_MeshFilter == null)
+                m_MeshFilter = GetComponent<MeshFilter>();
+            if (m_MeshFilter != null && m_MeshFilter.sharedMesh != m_Mesh) {
+                m_MeshFilter.sharedMesh = m_Mesh;
+            }
+            //var trans = this.transform;
+            // Graphics.DrawMesh(m_Mesh, trans.localToWorldMatrix, m_SkeletonMeshMat, 0);
+            // Gizmos.color = Color.white;
+            // Gizmos.DrawMesh(m_SkeletonMesh.sharedMesh, trans.position, trans.rotation, trans.lossyScale);
         }
 
     }
@@ -239,7 +262,12 @@ public class NsSkeletonRender : MonoBehaviour
     void OnDrawGizmosSelected() {
        
         DrawBones();
-        
+        if (!Application.isPlaying) {
+            if (m_IsShowMesh && m_SkeletonMesh != null) {
+              //  var trans = this.transform;
+               // Gizmos.DrawMesh(m_SkeletonMesh, trans.position, trans.rotation, trans.lossyScale);
+            }
+        }
         
     }
 }
