@@ -145,8 +145,9 @@ public class NsSkeletonRender : MonoBehaviour
         return ret;
     }
 
-    private Vector3 BoneInitTransVec(_SkeletonData skl, _BoneData bone, Vector3 vec)
+    private Vector3 BoneInitTransVec(_SkeletonData skl, _BoneData bone, Vector4 vec)
     {
+        vec.w = 1; // 這裏要注意
         Vector3 ret = bone.GetInitGlobalTransMatrix(skl) * bone.bindPose * vec;
         return ret;
     }
