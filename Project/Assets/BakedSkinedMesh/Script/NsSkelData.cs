@@ -15,10 +15,9 @@ public struct _BoneData {
     public Quaternion initRot;
     // 姿势绑定，在T姿势下，从模型空间到骨骼空间的转换
     public Matrix4x4 bindPose;
-    [NonSerialized]
-    private Matrix4x4 initWorldMatrix;
-    [NonSerialized]
-    private bool m_WordMatrixNoDirty;
+    public Matrix4x4 initWorldMatrix;
+    public bool m_WordMatrixNoDirty;
+    public string name;
 
     // 相对于父节点
     public Matrix4x4 GetInitLocalTransMatrix() {
@@ -54,6 +53,10 @@ public struct _BoneData {
             return Matrix4x4.identity;
     }
 
+
+    public void InitGlobalMatrix(_SkeletonData skl) {
+        GetInitGlobalTransMatrix(skl);
+    }
 
     public Matrix4x4 GetInitGlobalTransMatrix(_SkeletonData skl) {
         if (skl == null)

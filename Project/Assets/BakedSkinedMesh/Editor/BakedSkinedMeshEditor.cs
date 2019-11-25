@@ -96,8 +96,13 @@ public class BakedSkinedMeshEditor : EditorWindow
                 else
                 {
                     SkinnedMeshRenderer smR = sklMesh as SkinnedMeshRenderer;
-                    if (smR != null)
-                        mesh = smR.sharedMesh;
+                    if (smR != null) {
+                        if (sel == 2) {
+                            mesh = new Mesh();
+                            smR.BakeMesh(mesh);
+                        } else
+                            mesh = smR.sharedMesh;
+                    }
                 }
                 if (mesh != null)
                     meshList.Add(mesh);
@@ -114,6 +119,18 @@ public class BakedSkinedMeshEditor : EditorWindow
         } else if (sel == 1)
         {
             ExportCollada.ExportSklsToAsset(m_SelSkinMehes, filePath);
+        } else if (sel == 2) {
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            filePath = string.Format("{0}/{1}_bakedMesh.dae", Path.GetDirectoryName(filePath), fileName);
+            ExportCollada.Export(meshList, m_SelSkinMehes, filePath);
+            if (meshList != null) {
+                for (int i = 0; i < meshList.Count; ++i) {
+                    var mesh = meshList[i];
+                    if (mesh != null)
+                        GameObject.DestroyImmediate(mesh);
+                }
+                meshList.Clear();
+            }
         }
       //  ExportCollada.ExportToScene(meshList, m_SelSkinMehes);
 
@@ -177,6 +194,7 @@ public class BakedSkinedMeshEditor : EditorWindow
             // EditorGUILayout.Label
             if (m_SelSkinMehes != null && m_SelSkinMehes.Length > 0)
             {
+                bool isHasSkinedMesh = false;
                 m_Scroll = EditorGUILayout.BeginScrollView(m_Scroll, true, false);
                 for (int i = 0; i < m_SelSkinMehes.Length; ++i)
                 {
@@ -184,6 +202,9 @@ public class BakedSkinedMeshEditor : EditorWindow
                     if (sub != null)
                     {
                         EditorGUILayout.ObjectField(sub, typeof(Renderer), true);
+                        if (!isHasSkinedMesh) {
+                            isHasSkinedMesh = (sub is SkinnedMeshRenderer);
+                        }
                     }
                 }
                 EditorGUILayout.EndScrollView();
@@ -194,6 +215,9 @@ public class BakedSkinedMeshEditor : EditorWindow
                 if (GUILayout.Button("导出SkinedMesh数据到Asset"))
                 {
                     CombineSkinedMeshes(1);
+                }
+                if (isHasSkinedMesh && GUILayout.Button("导出SkinedMesh烘焙数据到Asset")) {
+                    CombineSkinedMeshes(2);
                 }
             }
         }

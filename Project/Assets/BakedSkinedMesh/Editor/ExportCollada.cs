@@ -543,6 +543,7 @@ class ExportCollada {
                 boneData.initScale = bone.localScale;
                 boneData.initRot = bone.localRotation;
                 boneData.bindPose = mesh.bindposes[i];
+                boneData.name = bone.name;
                 if (bone.parent == null) {
                     boneData.parentBone = -1;
                     sklData.m_RootBoneIndex = i;
@@ -557,6 +558,10 @@ class ExportCollada {
                 }
                 sklData.m_BoneDatas[i] = boneData;
                 sklData.m_StartBoneUV = m_LastExportBoneUVStart;
+            }
+
+            for (int i = 0; i < sklData.m_BoneDatas.Length; ++i) {
+                sklData.m_BoneDatas[i].InitGlobalMatrix(sklData);
             }
 
             if (skl.sharedMesh != null && skl.sharedMesh.isReadable) {
@@ -587,6 +592,10 @@ class ExportCollada {
         }
     }
 
+    private static void ExportBoneLocalToWorldMatrix(SkinnedMeshRenderer skl, string fileName) {
+
+    }
+
     public static void ExportSklsToAsset(Renderer[] skls, string fileName)
     {
         if (skls == null || skls.Length <= 0 || string.IsNullOrEmpty(fileName))
@@ -611,6 +620,8 @@ class ExportCollada {
                     ExportSklAsset(skl, sklFileName);
                     string vecFileName = string.Format("{0}_vertex_{1:D}.asset", noExtFileName, i);
                     ExportMeshAsset(skl, vecFileName);
+                    string localToWorldMatrixFileName = string.Format("{0}_LToW_Mat_{1:D}.asset", noExtFileName, i);
+                    ExportBoneLocalToWorldMatrix(skl, localToWorldMatrixFileName);
                 }
 
                 AssetDatabase.Refresh();
