@@ -195,6 +195,7 @@ public class NsSkeletonRender : MonoBehaviour
                             float w1 = m_BoneWeightList[i].x;
                             float w2 = m_BoneWeightList[i].y;
                             float w3 = m_BoneWeightList[i].z;
+                            // 这样可以节省一个FLOAT
                             float w4 = 1.0f - w1 - w2 - w3;
 
                             var p1 = BoneInitTransVec(m_SkeletonData, bone1, vec);
