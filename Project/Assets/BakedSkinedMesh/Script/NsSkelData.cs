@@ -112,7 +112,7 @@ public struct _VertexBoneData {
     public float boneWeight1;
     public float boneWeight2;
     public float boneWeight3;
-    public float boneWeight4;
+   // public float boneWeight4;
 }
 
 [Serializable]
@@ -175,13 +175,13 @@ public class _SkeletonData : ScriptableObject {
         }
     }
 
-    public List<Vector4> BoneWeightList {
+    public List<Vector3> BoneWeightList {
         get {
-            List<Vector4> ret = new List<Vector4>();
+            List<Vector3> ret = new List<Vector3>();
             if (m_VertexBoneData != null) {
                 for (int i = 0; i < m_VertexBoneData.Length; ++i) {
                     var data = m_VertexBoneData[i];
-                    Vector4 vec = new Vector4(data.boneWeight1, data.boneWeight2, data.boneWeight3, data.boneWeight4);
+                    Vector3 vec = new Vector4(data.boneWeight1, data.boneWeight2, data.boneWeight3);
                     ret.Add(vec);
                 }
             }

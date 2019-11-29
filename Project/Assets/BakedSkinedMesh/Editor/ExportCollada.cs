@@ -578,7 +578,6 @@ class ExportCollada {
                             vBoneData.boneWeight1 = boneWeights[i].weight0;
                             vBoneData.boneWeight2 = boneWeights[i].weight1;
                             vBoneData.boneWeight3 = boneWeights[i].weight2;
-                            vBoneData.boneWeight4 = boneWeights[i].weight3;
 
                             sklData.m_VertexBoneData[i] = vBoneData;
                         }

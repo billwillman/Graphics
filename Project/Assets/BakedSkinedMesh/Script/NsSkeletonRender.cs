@@ -18,7 +18,7 @@ public class NsSkeletonRender : MonoBehaviour
     [Range(0, 1)]
     public float m_AnimPos = 0f;
     private List<Vector4> m_BoneIndexList = new List<Vector4>();
-    private List<Vector4> m_BoneWeightList = new List<Vector4>();
+    private List<Vector3> m_BoneWeightList = new List<Vector3>();
     private Vector3[] m_MeshVecs = null;
     private Mesh m_Mesh = null;
     private int m_LastMeshFilterInstance = -1;
@@ -195,7 +195,7 @@ public class NsSkeletonRender : MonoBehaviour
                             float w1 = m_BoneWeightList[i].x;
                             float w2 = m_BoneWeightList[i].y;
                             float w3 = m_BoneWeightList[i].z;
-                            float w4 = m_BoneWeightList[i].w;
+                            float w4 = 1.0f - w1 - w2 - w3;
 
                             var p1 = BoneInitTransVec(m_SkeletonData, bone1, vec);
                             var p2 = BoneInitTransVec(m_SkeletonData, bone2, vec);
