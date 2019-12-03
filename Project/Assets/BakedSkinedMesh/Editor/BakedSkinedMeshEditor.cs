@@ -131,6 +131,10 @@ public class BakedSkinedMeshEditor : EditorWindow
                 }
                 meshList.Clear();
             }
+        } else if (sel == 3) {
+            // 合并动画到贴图
+            filePath = Path.GetDirectoryName(filePath);
+            ExportCollada.ExportAnimToTex(meshList, m_SelSkinMehes, filePath);
         }
       //  ExportCollada.ExportToScene(meshList, m_SelSkinMehes);
 
@@ -218,6 +222,10 @@ public class BakedSkinedMeshEditor : EditorWindow
                 }
                 if (isHasSkinedMesh && GUILayout.Button("导出SkinedMesh烘焙数据到Asset")) {
                     CombineSkinedMeshes(2);
+                }
+
+                if (isHasSkinedMesh && GUILayout.Button("合并动画到贴图")) {
+                    CombineSkinedMeshes(3);
                 }
             }
         }

@@ -632,6 +632,88 @@ class ExportCollada {
         }
     }
 
+    private static void ExportBindPoseToTex(Matrix4x4[] mats, string fileName) {
+        if ((!string.IsNullOrEmpty(fileName)) && mats != null && mats.Length > 0) {
+            // 每个骨骼12个Float,三个颜色就可以代替（3 * 4）
+            int colorPtCnt = mats.Length * 3;
+            float half = Mathf.Sqrt(colorPtCnt);
+            int w = Mathf.CeilToInt(half);
+            int h = Mathf.CeilToInt(((float)colorPtCnt) / ((float)w));
+            Texture2D tex = new Texture2D(w, h, TextureFormat.RGBAHalf, false);
+
+            Color[] cs = new Color[w * h];
+
+            // 只需要保存3行4列，因为最后一行为0 0 0 1
+            for (int i = 0; i < mats.Length; ++i) {
+                Color c = new Color(mats[i].m00, mats[i].m01, mats[i].m02, mats[i].m03);
+                cs[i * 3] = c;
+                c = new Color(mats[i].m10, mats[i].m11, mats[i].m12, mats[i].m13);
+                cs[i * 3 + 1] = c;
+                c = new Color(mats[i].m20, mats[i].m21, mats[i].m22, mats[i].m23);
+                cs[i * 3 + 2] = c;
+            }
+
+            tex.SetPixels(cs);
+            // 保存EXR
+            byte[] buffer = tex.EncodeToEXR();
+            System.IO.FileStream stream = new System.IO.FileStream(fileName, System.IO.FileMode.Create, System.IO.FileAccess.Write);
+            try {
+                stream.Write(buffer, 0, buffer.Length);
+                stream.Flush();
+            } finally {
+                stream.Close();
+                stream.Dispose();
+            }
+#if UNITY_EDITOR
+            GameObject.DestroyImmediate(tex);
+#else
+            GameObject.Destroy(tex);
+#endif
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            fileName = fileName.Replace('\\', '/');
+            int idx = fileName.IndexOf("Assets/", StringComparison.CurrentCultureIgnoreCase);
+            if (idx < 0) {
+                Debug.LogError("not found exr in Assets");
+                return;
+            }
+            fileName = fileName.Substring(idx);
+            var texImport = AssetImporter.GetAtPath(fileName) as TextureImporter;
+            if (texImport != null) {
+                texImport.textureType = TextureImporterType.Lightmap;
+                texImport.npotScale = TextureImporterNPOTScale.None;
+                texImport.mipmapEnabled = false;
+                texImport.isReadable = false;
+                texImport.wrapMode = TextureWrapMode.Clamp;
+                texImport.filterMode = FilterMode.Point;
+                
+                texImport.SetPlatformTextureSettings("Standalone", 1024, TextureImporterFormat.RGBAHalf);
+                texImport.SetPlatformTextureSettings("Android", 1024, TextureImporterFormat.RGBAHalf);
+                texImport.SetPlatformTextureSettings("iPhone", 1024, TextureImporterFormat.RGBAHalf);
+
+                texImport.SaveAndReimport();
+            } else
+                Debug.LogError("texImport == null");
+        }
+    }
+
+    // 合并动画到贴图
+    public static void ExportAnimToTex(List<Mesh> meshes, Renderer[] skls, string path) {
+        // 导出BindPose到纹理
+        if (meshes == null || meshes.Count <= 0 || skls == null || meshes.Count != skls.Length)
+            return;
+
+        for (int i = 0; i < skls.Length; ++i) {
+            var r = skls[i] as SkinnedMeshRenderer;
+            if (r != null && r.sharedMesh != null) {
+                string fileName = string.Format("{0}/bind_pose_{1:D}.exr", path, i);
+                ExportBindPoseToTex(r.sharedMesh.bindposes, fileName);
+            }
+        }
+    }
+
     public static void Export(List<Mesh> meshes, Renderer[] skls, string fileName, string name = "Noname") {
         if (meshes == null || meshes.Count <= 0 || skls == null || meshes.Count != skls.Length)
             return;
