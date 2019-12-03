@@ -22,6 +22,7 @@ public class BakedSkinedMeshEditor : EditorWindow
 {
     private GameObject m_SelGameObj = null;
     private Renderer[] m_SelSkinMehes = null;
+    private AnimationClip m_SelClip = null;
     private Vector2 m_Scroll = Vector2.zero;
     private ToolItems m_Tool = ToolItems.Tool_CombineMesh;
 
@@ -167,6 +168,7 @@ public class BakedSkinedMeshEditor : EditorWindow
             }
             m_SelGameObj = newSelect;
             m_SelSkinMehes = sklMesh;
+            m_SelClip = null;
             // 处理空MESH的情况
             if (m_SelSkinMehes != null)
             {
@@ -211,6 +213,12 @@ public class BakedSkinedMeshEditor : EditorWindow
                         }
                     }
                 }
+
+                if (isHasSkinedMesh) {
+                   // EditorGUILayout.ObjectField
+                    m_SelClip = EditorGUILayout.ObjectField("动画转贴图", m_SelClip, typeof(AnimationClip), true) as AnimationClip;
+                }
+
                 EditorGUILayout.EndScrollView();
                 if (GUILayout.Button("合并所有到普通MESH"))
                 {
