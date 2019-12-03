@@ -157,6 +157,7 @@ public class NsSkeletonRender : MonoBehaviour
 
     private Vector3 BoneInitTransVec(_SkeletonData skl, _BoneData bone, Vector4 vec)
     {
+        // 先将顶点通过T-POSE对应的骨骼矩阵转到骨骼空间，因为顶点的位置相对于骨骼位置是固定的，再乘以GetInitGlobalTransMatrix转到绑定效果的世界坐标位置
         vec.w = 1; // 這裏要注意
         Vector3 ret = bone.GetInitGlobalTransMatrix(skl) * bone.bindPose * vec;
         return ret;
