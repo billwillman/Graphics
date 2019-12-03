@@ -135,7 +135,8 @@ public class BakedSkinedMeshEditor : EditorWindow
         } else if (sel == 3) {
             // 合并动画到贴图
             filePath = Path.GetDirectoryName(filePath);
-            ExportCollada.ExportAnimToTex(meshList, m_SelSkinMehes, filePath);
+            ExportCollada.ExportAnimToTex(meshList, m_SelSkinMehes, m_SelClip, filePath);
+            
         }
       //  ExportCollada.ExportToScene(meshList, m_SelSkinMehes);
 

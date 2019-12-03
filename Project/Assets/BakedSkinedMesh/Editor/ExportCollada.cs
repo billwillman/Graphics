@@ -700,18 +700,45 @@ class ExportCollada {
     }
 
     // 合并动画到贴图
-    public static void ExportAnimToTex(List<Mesh> meshes, Renderer[] skls, string path) {
+    public static void ExportAnimToTex(List<Mesh> meshes, Renderer[] skls, AnimationClip clip, string path) {
         // 导出BindPose到纹理
         if (meshes == null || meshes.Count <= 0 || skls == null || meshes.Count != skls.Length)
             return;
+
+        var binds = AnimationUtility.GetCurveBindings(clip);
+        if (clip != null)
+        {
+            // 提取动画数据
+
+            //  AnimationUtility.
+            if (binds != null && binds.Length > 0)
+            {
+                for (int x = 0; x < binds.Length; ++x)
+                {
+                    var bind = binds[x];
+                    if (bind != null)
+                    {
+                        //Debug.Log(bind.propertyName);
+                        AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, bind);
+                        if (curve != null)
+                        {
+                            
+                        }
+                    }
+                }
+            }
+        }
 
         for (int i = 0; i < skls.Length; ++i) {
             var r = skls[i] as SkinnedMeshRenderer;
             if (r != null && r.sharedMesh != null) {
                 string fileName = string.Format("{0}/bind_pose_{1:D}.exr", path, i);
                 ExportBindPoseToTex(r.sharedMesh.bindposes, fileName);
+                
             }
         }
+
+        
     }
 
     public static void Export(List<Mesh> meshes, Renderer[] skls, string fileName, string name = "Noname") {
