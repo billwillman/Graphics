@@ -718,6 +718,7 @@ class ExportCollada {
                     var bind = binds[x];
                     if (bind != null)
                     {
+                        Debug.LogError(bind.path);
                         //Debug.Log(bind.propertyName);
                         AnimationCurve curve = AnimationUtility.GetEditorCurve(clip, bind);
                         if (curve != null)
