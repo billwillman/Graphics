@@ -151,6 +151,9 @@ public class BakedSkinedMeshEditor : EditorWindow
                     Transform[] bones = sklRender.bones;
                     // 按照的bone的位置重新计算bindpose
                     for (int i = 0; i < bones.Length; ++i) {
+                        /*
+                         * 因为有可能外部进行了缩放或者其他变换，bone.worldToLocalMatrix有节点影响，所以要返乘一个变换sklRender.transform.localToWorldMatrix
+                         */
                         bindposes[i] = bones[i].worldToLocalMatrix * sklRender.transform.localToWorldMatrix;
                     }
                     mesh.bindposes = bindposes;
