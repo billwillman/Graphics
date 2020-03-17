@@ -67,19 +67,23 @@ public class BakedSkinedMeshEditor : EditorWindow
             Debug.LogError("选中合并对象为NULL");
             return;
         }
-        string filePath = AssetDatabase.GetAssetPath(m_SelGameObj);
-        if (string.IsNullOrEmpty(filePath)) {
-            string scenePath = AssetDatabase.GetAssetOrScenePath(m_SelGameObj);
-            if (!string.IsNullOrEmpty(scenePath)) {
-		#if !UNITY_5_3
-                filePath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(m_SelGameObj);
-		#endif
-                if (string.IsNullOrEmpty(filePath)) {
-                    Debug.LogError("选中对象文件路径为空");
-                    return;
+
+        string filePath = string.Empty;
+        if (sel != 4) {
+            filePath = AssetDatabase.GetAssetPath(m_SelGameObj);
+            if (string.IsNullOrEmpty(filePath)) {
+                string scenePath = AssetDatabase.GetAssetOrScenePath(m_SelGameObj);
+                if (!string.IsNullOrEmpty(scenePath)) {
+#if !UNITY_5_3
+                    filePath = PrefabUtility.GetPrefabAssetPathOfNearestInstanceRoot(m_SelGameObj);
+#endif
+                    if (string.IsNullOrEmpty(filePath)) {
+                        Debug.LogError("选中对象文件路径为空");
+                        return;
+                    }
                 }
+
             }
-           
         }
 
         List<Mesh> meshList = new List<Mesh>();
@@ -137,6 +141,23 @@ public class BakedSkinedMeshEditor : EditorWindow
             filePath = Path.GetDirectoryName(filePath);
             ExportCollada.ExportAnimToTex(meshList, m_SelSkinMehes, m_SelClip, filePath);
             
+        } else if (sel == 4) {
+            // bindPose转TPose
+            for (int j = 0; j < m_SelSkinMehes.Length; ++j) {
+                SkinnedMeshRenderer sklRender = m_SelSkinMehes[j] as SkinnedMeshRenderer;
+                if (sklRender != null) {
+                    Mesh mesh = GameObject.Instantiate<Mesh>(sklRender.sharedMesh);
+                    Matrix4x4[] bindposes = mesh.bindposes;
+                    Transform[] bones = sklRender.bones;
+                    // 按照的bone的位置重新计算bindpose
+                    for (int i = 0; i < bones.Length; ++i) {
+                        bindposes[i] = bones[i].worldToLocalMatrix * sklRender.transform.localToWorldMatrix;
+                    }
+                    mesh.bindposes = bindposes;
+                    // 赋值新的mesh
+                    sklRender.sharedMesh = mesh;
+                }
+            }
         }
       //  ExportCollada.ExportToScene(meshList, m_SelSkinMehes);
 
@@ -235,6 +256,10 @@ public class BakedSkinedMeshEditor : EditorWindow
 
                 if (isHasSkinedMesh && GUILayout.Button("合并动画到贴图")) {
                     CombineSkinedMeshes(3);
+                }
+
+                if (isHasSkinedMesh && GUILayout.Button("bindPose转TPose")) {
+                    CombineSkinedMeshes(4);
                 }
             }
         }
