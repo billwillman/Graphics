@@ -57,7 +57,7 @@
             {
                 // sample the texture
                 fixed4 col = tex2D(_MainTex, i.uv);
-				fixed4 c2 = tex2Dproj(_ProjTex, i.proj);
+				fixed4 c2 = tex2D(_ProjTex, i.proj); // tex2D和tex2Dproj区别，tex2Dproj内部会对xyz/w 
 				fixed4 c = c2 * col;
 				//fixed4 c2 = tex2Dproj(_ProjTex, UNITY_PROJ_COORD(i.proj));
                 // apply fog
